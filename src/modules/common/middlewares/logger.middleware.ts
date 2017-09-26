@@ -2,9 +2,9 @@ import { Middleware, NestMiddleware, ExpressMiddleware } from '@nestjs/common';
 
 @Middleware()
 export class LoggerMiddleware implements NestMiddleware {
-  resolve(route: string): ExpressMiddleware {
+  resolve(controllerName: string): ExpressMiddleware {
     return (req, res, next) => {
-      console.log('Request to the ' + route);
+      console.log('Request to the ' + controllerName);
       next();
     };
   }

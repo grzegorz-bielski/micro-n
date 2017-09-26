@@ -1,15 +1,23 @@
-import { Component } from '@nestjs/common';
+import { Component, Inject } from '@nestjs/common';
+import { Repository } from 'typeorm';
 import { User } from './interfaces/user.interface';
+import { UserEntity } from './user.entity';
+import { UserRepositoryToken } from '../constants';
 
 @Component()
 export class UsersService {
-  private readonly users: User[] = [];
 
-  getAll(): User[] {
-    return this.users;
+  constructor(
+    @Inject(UserRepositoryToken)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
+
+  getAll(): Promise<UserEntity[]> {
+    return this.userRepository.find();
   }
 
-  create(user: User) {
-    this.users.push(user);
+  signUp(user: User): Promise<UserEntity> {
+    const newUser = Object.assign(new UserEntity(), user);
+    return this.userRepository.persist(newUser);
   }
 }

@@ -9,7 +9,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     response.status(excStatus).json({
       statusCode: excStatus,
-      message: 'UsersController exception',
+      message: 'HttpException',
       details: excResponse,
     });
   }

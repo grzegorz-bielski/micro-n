@@ -1,5 +1,6 @@
-import { Module, NestModule, MiddlewaresConsumer } from '@nestjs/common';
+import { Module, NestModule, MiddlewaresConsumer, RequestMethod } from '@nestjs/common';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { AuthMiddleware } from './common/middlewares/auth.middleware';
 import { UsersModule } from './users/users.module';
 import { UsersController } from './users/users.controller';
 
@@ -11,6 +12,11 @@ export class ApplicationModule implements NestModule {
         consumer
             .apply(LoggerMiddleware)
             .with('UsersController')
-            .forRoutes(UsersController);
+            .forRoutes(UsersController)
+
+            .apply(AuthMiddleware)
+            .forRoutes(
+                { path: '/logout', method: RequestMethod.DELETE },
+            );
     }
 }
