@@ -21,22 +21,15 @@ export class UsersService {
   }
 
   public async signUp(user: User): Promise<UserEntity> {
-
     await this.availabilityService.test(user, [
       { property: 'name', value: user.name },
       { property: 'email', value: user.email },
     ]);
-
     const newUser = Object.assign(new UserEntity(), user);
-
-    // const access = 'auth';
-    // const token = jwt.sign(
-    //     {_id: user._id.toHexString(), access}, 
-    //     process.env.JWT_SECRET
-    // ).toString();
-    // user.tokens.push({access, token});
-
-    return this.userRepository.persist(newUser);
+    console.log('newUser from service', newUser);
+    const userRep = await this.userRepository.persist(newUser);
+    console.log('userRepo newUser', userRep);
+    return userRep;
   }
 
 }

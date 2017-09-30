@@ -19,7 +19,6 @@ async function bootstrap() {
   app.use(helmet());
   app.use(bodyParser.json());
   app.use(compression());
-  // app.use(notFoundMiddleware);
 
   // nest global config
   app.setGlobalPrefix('api');

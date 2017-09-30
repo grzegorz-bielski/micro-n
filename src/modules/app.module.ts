@@ -15,8 +15,6 @@ export class ApplicationModule implements NestModule {
             .forRoutes(UsersController)
 
             .apply(AuthMiddleware)
-            .forRoutes(
-                { path: '/logout', method: RequestMethod.DELETE },
-            );
+            .forRoutes({ path: '/*', method: RequestMethod.ALL });
     }
 }

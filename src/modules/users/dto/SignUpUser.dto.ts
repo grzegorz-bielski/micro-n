@@ -11,10 +11,6 @@ export class SignUpUserDto {
   @IsString()
   readonly password: string;
 
-  readonly roles: string[];
-
   @IsString()
   readonly description: string;
-
-  // avatar
 }
