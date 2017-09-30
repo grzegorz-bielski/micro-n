@@ -1,6 +1,6 @@
 import { Controller, Request, Get, Post, Delete, Body, All, UseGuards } from '@nestjs/common';
 import { SignUpUserDto } from './dto/SignUpUser.dto';
-import { UsersService } from './users.service';
+import { UsersService } from './services/users.service';
 import { User } from './interfaces/user.interface';
 import { UserEntity } from './user.entity';
 import { ForbiddenException } from '../common/exceptions/forbidden.exception';

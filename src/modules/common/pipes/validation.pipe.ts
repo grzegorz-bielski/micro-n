@@ -2,13 +2,15 @@ import { HttpException } from '@nestjs/core';
 import { PipeTransform, Pipe, ArgumentMetadata, HttpStatus } from '@nestjs/common';
 import { validate, ValidationError } from 'class-validator';
 import { plainToClass } from 'class-transformer';
+import { ValidationException } from '../exceptions/validation.exception';
 
 @Pipe()
 export class ValidationPipe implements PipeTransform<any> {
+
+   // @value -> currently procesed parameter, np req.body
+   // @metadata -> metadata of parameter: { type, metatype, data}
    public async transform(value, metadata: ArgumentMetadata) {
-    // value -> currently procesed parameter, np req.body
-    // metadata -> metadata of parameter: { type, metatype, data}
-    // console.log(metadata);
+
     const { metatype } = metadata;
 
     // if there is no metatype or it's not native JS type then do nothing
@@ -20,7 +22,7 @@ export class ValidationPipe implements PipeTransform<any> {
     const errors = await validate(objectOfMetaType);
 
     if (errors.length > 0) {
-      this.throwValidationError(errors);
+      throw new ValidationException(errors);
     }
 
     return value;
@@ -31,7 +33,4 @@ export class ValidationPipe implements PipeTransform<any> {
     return !types.find((type) => metatype === type);
   }
 
-  private throwValidationError(errors: ValidationError[]) {
-    throw new HttpException(errors, HttpStatus.BAD_REQUEST);
-  }
 }

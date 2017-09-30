@@ -5,7 +5,8 @@ import { Test } from '@nestjs/Testing';
 import { User } from './interfaces/user.interface';
 import { DatabaseModule } from '../database/database.module';
 import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
+import { UsersService } from './services/users.service';
+import { AvailabilityService } from './services/availability.service';
 import { userProviders } from './users.providers';
 
 describe('UsersModule', () => {
@@ -27,6 +28,7 @@ describe('UsersModule', () => {
       controllers: [UsersController],
       components: [
         ...userProviders,
+        AvailabilityService,
         UsersService,
       ],
     }).compile();

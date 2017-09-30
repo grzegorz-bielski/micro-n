@@ -9,7 +9,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     response.status(excStatus).json({
       statusCode: excStatus,
-      message: 'HttpException',
+      type: 'HttpException',
       details: excResponse,
     });
   }
