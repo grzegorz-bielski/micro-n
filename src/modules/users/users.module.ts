@@ -1,17 +1,16 @@
 import { Module, NestModule } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
+import { AuthModule } from '../auth/auth.module';
 import { UsersController } from './users.controller';
 import { userProviders } from './users.providers';
 import { UsersService } from './services/users.service';
 import { AvailabilityService } from './services/availability.service';
-import { TokensService } from './services/tokens.service';
 
 @Module({
-    modules: [ DatabaseModule ],
+    modules: [ DatabaseModule, AuthModule ],
     controllers: [ UsersController ],
     components: [
         ...userProviders,
-        TokensService,
         AvailabilityService,
         UsersService,
     ],

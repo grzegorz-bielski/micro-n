@@ -1,15 +1,19 @@
-import { Component, Inject } from '@nestjs/common';
+import { Component } from '@nestjs/common';
 import { HttpException } from '@nestjs/core';
 import { HttpStatus } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
 @Component()
-export class TokensService {
+export class AuthService {
   private signOptions = {
     expiresIn: '7d',
   };
 
-  public async create(data: object) {
+  constructor(
+    //
+  ) {}
+
+  public async createAccessToken(data: object) {
     try {
       const token = await this.sign(data, this.signOptions);
       return token.toString();

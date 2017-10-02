@@ -1,5 +1,5 @@
 import { createConnection } from 'typeorm';
-import { DbConnectionToken } from '../constants';
+import { MySQLConnectionToken } from '../constants';
 import { UserEntity } from '../users/user.entity';
 import { ConnectionStringParser } from './ConnectionStringParser';
 
@@ -7,7 +7,7 @@ const options = new ConnectionStringParser(process.env.DATABASE_URL);
 
 export const databaseProviders = [
   {
-    provide: DbConnectionToken,
+    provide: MySQLConnectionToken,
     useFactory: async () => await createConnection({
       type: 'mysql',
       host: options.host,

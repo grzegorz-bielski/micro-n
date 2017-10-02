@@ -1,9 +1,9 @@
-import { Controller, Request, Get, Post, Delete, Body, All, UseGuards, Response, HttpStatus } from '@nestjs/common';
+import { Controller, Request, Get, Post, Delete, Body, All, UseGuards, Response, HttpStatus, ReflectMetadata } from '@nestjs/common';
 import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 import { SignUpUserDto } from './dto/SignUpUser.dto';
 import { UsersService } from './services/users.service';
-import { TokensService } from './services/tokens.service';
+import { AuthService } from '../auth/auth.service';
 import { User } from './interfaces/user.interface';
 import { UserEntity } from './user.entity';
 import { ForbiddenException } from '../common/exceptions/forbidden.exception';
@@ -17,7 +17,7 @@ import { TimestampInterceptor } from '../common/interceptors/timestamp.intercept
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly tokensService: TokensService,
+    private readonly authService: AuthService,
   ) {}
 
   @Get()
@@ -32,7 +32,9 @@ export class UsersController {
   // }
 
   @Get('/me')
+  // @UseGuards()
   @Roles('user')
+  // @ReflectMetadata('test', 'test stuff')
   getMe() {
     return 'me';
   }
@@ -40,8 +42,7 @@ export class UsersController {
   @Post('/signup')
   async signUp(@Body() user: SignUpUserDto, @Response() response: express.Response): Promise<void> {
     const newUser: UserEntity = await this.usersService.signUp(user);
-    console.log('newUser roles:', newUser.roles);
-    const token: string = await this.tokensService.create({ roles: newUser.roles, id: newUser.id });
+    const token: string = await this.authService.createAccessToken({ roles: newUser.roles, id: newUser.id });
 
     const sanitizedUser = Object.assign({}, newUser);
     delete sanitizedUser.password;
