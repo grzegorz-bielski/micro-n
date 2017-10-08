@@ -1,4 +1,4 @@
-import { Controller, Post, Get, All, Body, Param, Request, UseGuards, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Delete, All, Body, Param, Request, UseGuards, HttpStatus } from '@nestjs/common';
 import { HttpException } from '@nestjs/core';
 import * as express from 'express';
 
@@ -26,7 +26,7 @@ export class AuthController {
 
   // revoke token
   @Roles('admin')
-  @Post('/token/revoke')
+  @Delete('/token/revoke')
   public revokeToken( @Body() body: AuthDto ): void {
     this.authService.revokeRefreshToken(body);
   }
@@ -35,7 +35,7 @@ export class AuthController {
   @Roles('admin')
   @Get('/token/all/:id')
   public async getAllTokens( @Param() params: { id: string }): Promise<IrefershTokenRedis[]> {
-    return this.authService.getAllTokens(Number.parseInt(params.id));
+    return this.authService.getAllRefreshTokens(Number.parseInt(params.id));
   }
 
   @All('*')

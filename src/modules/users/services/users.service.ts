@@ -1,6 +1,10 @@
-import { Component, Inject } from '@nestjs/common';
+import { Component, Inject, HttpStatus } from '@nestjs/common';
+import { HttpException } from '@nestjs/core';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
+
 import { User } from './../interfaces/user.interface';
+import { Credentials } from './../interfaces/credentials.interface';
 import { UserEntity } from './../user.entity';
 import { UserRepositoryToken } from '../../constants';
 
@@ -17,12 +21,22 @@ export class UsersService {
   }
 
   public signUp(user: User): Promise<UserEntity> {
-    const newUser = Object.assign(new UserEntity(), user);
-    return this.userRepository.persist(newUser);
+    const newUser: UserEntity & User = Object.assign(new UserEntity(), user);
+    return this.userRepository.save(newUser);
+  }
 
-    // console.log('newUser from service', newUser);
-    // console.log('userRepo newUser', userRep);
-    // return userRep;
+  public async logIn(credentials: Credentials): Promise<UserEntity> {
+    const user: UserEntity = await this.userRepository.findOne({ email: credentials.email});
+    const isPasswordValid: boolean = await bcrypt.compare(credentials.password, user.password);
+
+    if (!isPasswordValid) {
+      throw new HttpException('Invalid password.', HttpStatus.UNAUTHORIZED);
+    }
+    if (!user.isActive) {
+      throw new HttpException('Inactive account.', HttpStatus.UNAUTHORIZED);
+    }
+
+    return user;
   }
 
   public updateStatus(id: string, status: boolean) {

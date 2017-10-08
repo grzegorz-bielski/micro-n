@@ -1,9 +1,10 @@
-import { Controller, Request, Get, Post, Delete, Body, All, UseGuards, Response, HttpStatus, ReflectMetadata, Query, UseInterceptors } from '@nestjs/common';
+import { Controller, Request, Get, Post, Delete, Body, All, Headers, UseGuards, Response, HttpStatus, ReflectMetadata, Query, UseInterceptors } from '@nestjs/common';
 import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 
 import { SignUpUserDto } from './dto/SignUpUser.dto';
 import { VerificationQueryDto } from './dto/VerificationQuery.dto';
+import { LogInCredentialsDto } from './dto/LogInCredentials.dto';
 import { UserEntity } from './user.entity';
 
 import { UsersService } from './services/users.service';
@@ -17,6 +18,12 @@ import { NotFoundException } from '../common/exceptions/notFound.exception';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TimestampInterceptor } from '../common/interceptors/timestamp.interceptor';
 import { SanitizationInterceptor } from './interceptors/sanitization.interceptor';
+
+interface IResponseUser {
+  accessToken: string;
+  refreshToken: string;
+  user: UserEntity;
+}
 
 @Controller('users')
 @UseGuards(RolesGuard)
@@ -35,23 +42,8 @@ export class UsersController {
     return this.usersService.getAll();
   }
 
-  // @Get('forbidden')
-  // async forbidden(): Promise<void> {
-  //   throw new ForbiddenException();
-  // }
-
-  @Get('/me')
-  // @UseGuards()
-  @Roles('user')
-  // @ReflectMetadata('test', 'test stuff')
-  getMe() {
-    return 'me';
-  }
-
   @Get('/verify')
-  public async verifyUser(
-    @Query() query: VerificationQueryDto,
-  ) {
+  public async verifyUser( @Query() query: VerificationQueryDto ): Promise<string> {
     // verify user
     const id = await this.verificationService.verify(query.hash);
     // update user status
@@ -59,15 +51,13 @@ export class UsersController {
     // delete hash
     this.verificationService.deleteHash(query.hash);
 
-    // todo:
-    // render nice verification msg
+    // TODO: render nice verification msg
     return 'verified';
   }
 
   @Post('/signup')
   @UseInterceptors(SanitizationInterceptor)
-  public async signUp(@Body() user: SignUpUserDto, @Request() request: express.Request): Promise<object> {
-
+  public async signUp(@Body() user: SignUpUserDto, @Request() request: express.Request): Promise<IResponseUser> {
     // check if given credentials are available
     await this.availabilityService.test(user, [
       { property: 'name', value: user.name },
@@ -98,9 +88,41 @@ export class UsersController {
     };
   }
 
+  @Post('/login')
+  @UseInterceptors(SanitizationInterceptor)
+  public async logIn(@Body() credentials: LogInCredentialsDto): Promise<IResponseUser> {
+    // get user & new tokens
+    const user: UserEntity = await this.usersService.logIn(credentials);
+    const tokenData: IcreateToken = { roles: user.roles, id: user.id };
+    const tokens: string[] = await Promise.all([
+      this.authService.createAccessToken(tokenData),
+      this.authService.createRefreshToken(tokenData),
+    ]);
+
+    // send user & tokens to sanitization interceptor
+    return {
+      accessToken: tokens[0],
+      refreshToken: tokens[1],
+      user,
+    };
+
+  }
+
   @Delete('/logout')
-  async logOut(): Promise<string> {
-    return 'logout';
+  @Roles('user')
+  public logOut(@Request() request, @Headers() headers): void {
+    // remove current refresh token
+    this.authService.revokeRefreshToken({
+      id: request.user.id,
+      refreshToken: headers['x-refresh'],
+    });
+  }
+
+  @Delete('/logoutall')
+  @Roles('user')
+  public logOutAll(@Request() request): void {
+    // remove all tokens in Redis
+    this.authService.revokeAllRefreshTokens(request.user.id);
   }
 
   @All('*')

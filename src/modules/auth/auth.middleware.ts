@@ -9,8 +9,11 @@ export class AuthMiddleware implements NestMiddleware {
       const token = request.header('x-auth');
 
       if (!token) {
-        // if there is no token set role to guest
-        request.roles = ['guest'];
+        // if there is no token set role to guest and id to null
+        request.user = {
+          roles: ['guest'],
+          id: null,
+        };
       } else {
         // if there is token then verify it and set roles based on `decoded.roles`
 
@@ -19,12 +22,15 @@ export class AuthMiddleware implements NestMiddleware {
           if (error) {
             throw new UnauthorizedException(error);
           } else {
-            request.roles = JSON.parse(decoded.roles);
-            console.log('auth roles: ', request.roles);
+            request.user = {
+              roles: JSON.parse(decoded.roles),
+              id: decoded.id,
+            };
           }
         });
       }
       // then let `RolesGuard` check if given roles will be sufficient to access particular route
+      console.log('auth roles: ', request.user);
       next();
     };
   }

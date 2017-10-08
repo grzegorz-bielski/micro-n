@@ -78,7 +78,7 @@ export class VerificationService {
     }
 
     if (info === 1) {
-      throw new HttpException('Verification for that email has been already requested.', HttpStatus.CONFLICT);
+      throw new HttpException('Verification for that email has been already requested!', HttpStatus.CONFLICT);
     }
   }
 

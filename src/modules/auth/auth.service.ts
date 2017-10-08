@@ -27,7 +27,7 @@ export interface IAuthService {
   refreshAccessToken(data: IrefreshToken): Promise<string>;
   createRefreshToken(data: IcreateToken): Promise<string>;
   revokeRefreshToken(data: IrefreshToken): Promise<void>;
-  getAllTokens(id: number): Promise<IrefershTokenRedis[]>;
+  getAllRefreshTokens(id: number): Promise<IrefershTokenRedis[]>;
 }
 
 @Component()
@@ -52,7 +52,7 @@ export class AuthService implements IAuthService {
   }
 
   public async refreshAccessToken(data: IrefreshToken): Promise<string> {
-    const userId = `user-${data.id}`;
+    const userId: string = `user-${data.id}`;
 
     // check if id exists in DB
     await this.checkIfExists(userId);
@@ -64,14 +64,20 @@ export class AuthService implements IAuthService {
     return this.createAccessToken({ id: data.id, roles: refreshTokenObj.roles });
   }
 
-  public async getAllTokens(id: number): Promise<IrefershTokenRedis[]> {
-    const userId = `user-${id}`;
+  public async getAllRefreshTokens(id: number): Promise<IrefershTokenRedis[]> {
+    const userId: string = `user-${id}`;
 
     // check if id exists in DB
     await this.checkIfExists(userId);
 
-    // return tokens
-    return this.getRefreshTokens(id);
+    // get all refresh tokens
+    const refreshTokens: IrefershTokenRedis[] = await this.getRefreshTokens(id);
+
+    if (refreshTokens.length <= 0) {
+      throw new HttpException('This user doesn\'t have any refresh tokens.', HttpStatus.NOT_FOUND);
+    }
+
+    return refreshTokens;
   }
 
   public async createRefreshToken(data: IcreateToken): Promise<string> {
@@ -116,6 +122,20 @@ export class AuthService implements IAuthService {
 
   }
 
+  public async revokeAllRefreshTokens(id: number): Promise<void> {
+    const userId: string = `user-${id}`;
+
+    // check if id exists in DB
+    await this.checkIfExists(userId);
+
+    // delete
+    try {
+      await this.redisClient.hdelAsync(userId);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   public async getRefreshTokens(id: number): Promise<IrefershTokenRedis[]> {
     const userId: string = `user-${id}`;
     let reply: number;
@@ -128,13 +148,15 @@ export class AuthService implements IAuthService {
 
     if (reply === 1) {
       const refreshTokensString: string = await this.redisClient.hgetAsync(userId, this.tokenField);
-      return JSON.parse(refreshTokensString);
+      const refreshTokens =  JSON.parse(refreshTokensString);
+
+      return refreshTokens;
     }
 
     return null;
   }
 
-  public async getRefreshTokenObj(data: IrefreshToken, refreshTokens: IrefershTokenRedis[] = null): Promise<IrefershTokenRedis> {
+  private async getRefreshTokenObj(data: IrefreshToken, refreshTokens: IrefershTokenRedis[] = null): Promise<IrefershTokenRedis> {
     // if tokens weren't provided -> find them
     if (!refreshTokens) {
       refreshTokens = await this.getRefreshTokens(data.id);
@@ -150,8 +172,6 @@ export class AuthService implements IAuthService {
     return refreshTokenObj;
   }
 
-  // private methods
-
   private async checkIfExists(userId: string): Promise<void> {
     let reply: number;
 
@@ -163,7 +183,7 @@ export class AuthService implements IAuthService {
     }
 
     if (reply === 0) {
-      throw new HttpException('User with such id doesn\'t have any refresh tokens.', HttpStatus.NOT_FOUND);
+      throw new HttpException('There is no user with such ID', HttpStatus.NOT_FOUND);
     }
   }
 
