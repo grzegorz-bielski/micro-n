@@ -33,6 +33,11 @@ export class UserEntity {
   })
   public roles: string;
 
+  @Column({
+    default: false,
+  })
+  public isActive: boolean;
+
   // hash password before putting to the DB
   @BeforeInsert()
   public async encrypt() {
@@ -45,11 +50,13 @@ export class UserEntity {
     }
   }
 
-  // if no roles are provided then return default one
+  // return default roles to service;
   @AfterInsert()
   public addDefault() {
     if (!this.roles) {
       this.roles = defaultRole;
     }
+
+    this.isActive = false;
   }
 }

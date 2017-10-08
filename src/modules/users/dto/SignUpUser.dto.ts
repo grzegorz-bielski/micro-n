@@ -1,4 +1,4 @@
-import { IsString, IsEmail, Validate } from 'class-validator';
+import { IsString, IsEmail } from 'class-validator';
 
 export class SignUpUserDto {
 

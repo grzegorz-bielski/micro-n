@@ -1,4 +1,4 @@
-import './config/config';
+import './config/configure';
 
 import { NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
@@ -6,7 +6,6 @@ import { ApplicationModule } from './modules/app.module';
 import { ValidationPipe } from './modules/common/pipes/validation.pipe';
 import { TimestampInterceptor } from './modules/common/interceptors/timestamp.interceptor';
 import { HttpExceptionFilter } from './modules/common/filters/httpException.filter';
-// import { notFoundMiddleware } from './modules/common/middlewares/notFound.middleware';
 
 import * as compression from 'compression';
 import * as bodyParser from 'body-parser';

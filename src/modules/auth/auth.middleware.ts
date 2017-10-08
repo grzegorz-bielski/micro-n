@@ -13,7 +13,8 @@ export class AuthMiddleware implements NestMiddleware {
         request.roles = ['guest'];
       } else {
         // if there is token then verify it and set roles based on `decoded.roles`
-        // todo resfresh tokens
+
+        // todo: resfresh tokens
         jwt.verify(token, process.env.JWT_SECRET, (error, decoded) => {
           if (error) {
             throw new UnauthorizedException(error);

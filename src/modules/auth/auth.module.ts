@@ -5,9 +5,18 @@ import { AuthService } from './auth.service';
 import { AuthMiddleware } from './auth.middleware';
 
 @Module({
-    controllers: [ AuthController ],
-    components: [ AuthService ],
-    exports: [ AuthService ],
+    modules: [
+      DatabaseModule,
+    ],
+    controllers: [
+      AuthController,
+    ],
+    components: [
+      AuthService,
+    ],
+    exports: [
+      AuthService,
+    ],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewaresConsumer): void {

@@ -1,5 +1,5 @@
 // Set up env variables based on Jest's globals -> jest.json
-import '../../config/config';
+import '../../config/configure';
 
 import { Test } from '@nestjs/Testing';
 import { User } from './interfaces/user.interface';
