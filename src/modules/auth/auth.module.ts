@@ -1,8 +1,8 @@
 import { Module, NestModule, MiddlewaresConsumer, RequestMethod } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { AuthMiddleware } from './auth.middleware';
+import { AuthController } from './controllers/auth.controller';
+import { AuthService } from './services/auth.service';
+import { AuthMiddleware } from './middlewares/auth.middleware';
 
 @Module({
     modules: [

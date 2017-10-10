@@ -1,5 +1,4 @@
-import './config/configure';
-
+import { setUpConfig } from './config/configure';
 import { NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
 import { ApplicationModule } from './modules/app.module';
@@ -28,4 +27,5 @@ async function bootstrap() {
   await app.listen(3000);
 }
 
+setUpConfig();
 bootstrap();

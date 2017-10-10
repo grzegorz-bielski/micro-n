@@ -2,12 +2,12 @@ import { Controller, Post, Get, Delete, All, Body, Param, Request, UseGuards, Ht
 import { HttpException } from '@nestjs/core';
 import * as express from 'express';
 
-import { NotFoundException } from '../common/exceptions/notFound.exception';
-import { AuthService } from './auth.service';
-import { AuthDto } from './dto/auth.dto';
-import { Roles } from '../common/decorators/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { IrefershTokenRedis } from './auth.service';
+import { NotFoundException } from '../../common/exceptions/notFound.exception';
+import { AuthService } from './../services/auth.service';
+import { AuthDto } from './../dto/auth.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { IrefershTokenRedis } from './../services/auth.service';
 
 @Controller('auth')
 @UseGuards(RolesGuard)

@@ -42,6 +42,8 @@ export class VerificationService {
 
   public async verify(hash: string) {
     let id: string;
+
+    // find hash in DB
     try {
       id = await this.redisClient.getAsync(hash);
     } catch (error) {
@@ -57,6 +59,8 @@ export class VerificationService {
 
   public async deleteHash(hash) {
     let reply;
+
+    // delete hash from DB
     try {
       reply = await this.redisClient.delAsync(hash);
     } catch (error) {
@@ -70,6 +74,7 @@ export class VerificationService {
 
   private async checkIfExists(data: string): Promise<void> {
     let info: any;
+
     try {
       info = await this.redisClient.existsAsync(data);
     } catch (error) {

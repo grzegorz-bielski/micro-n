@@ -3,8 +3,8 @@ import { HttpException } from '@nestjs/core';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 
-import { RedisClientToken } from '../constants';
-import { IRedisClientPromisifed } from '../database/database.interface';
+import { RedisClientToken } from '../../constants';
+import { IRedisClientPromisifed } from '../../database/database.interface';
 
 export interface IcreateToken {
   id: number;
@@ -32,18 +32,18 @@ export interface IAuthService {
 
 @Component()
 export class AuthService implements IAuthService {
-  private readonly signOptions = {
+  private readonly defaultOptions: jwt.SignOptions = {
     expiresIn: '1h',
   };
   private readonly tokenField = 'refreshTokens';
 
   constructor( @Inject(RedisClientToken) private readonly redisClient: IRedisClientPromisifed ) {}
 
-  public async createAccessToken(data: IcreateToken): Promise<string> {
+  public async createAccessToken(data: IcreateToken, options: jwt.SignOptions = this.defaultOptions): Promise<string> {
     let token: string;
 
     try {
-      token = (await this.sign(data, this.signOptions)).toString();
+      token = (await this.sign(data, options)).toString();
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
