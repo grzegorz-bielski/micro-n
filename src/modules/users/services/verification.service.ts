@@ -3,8 +3,8 @@ import { HttpException } from '@nestjs/core';
 import * as crypto from 'crypto';
 
 import { RedisClientToken } from '../../constants';
-import { IRedisClientPromisifed } from '../../database/database.interface';
-import { MailService } from '../../mail/mail.service';
+import { IRedisClientPromisifed } from '../../database/interfaces/database.interface';
+import { MailService } from '../../mail/services/mail.service';
 import { UsersService } from '../services/users.service';
 
 interface IverificationData {

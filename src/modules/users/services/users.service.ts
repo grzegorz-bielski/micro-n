@@ -5,7 +5,7 @@ import * as bcrypt from 'bcryptjs';
 
 import { User } from './../interfaces/user.interface';
 import { Credentials } from './../interfaces/credentials.interface';
-import { UserEntity } from './../user.entity';
+import { UserEntity } from './../entities/user.entity';
 import { UserRepositoryToken } from '../../constants';
 
 @Component()

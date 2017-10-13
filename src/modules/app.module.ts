@@ -1,7 +1,7 @@
 import { Module, NestModule, MiddlewaresConsumer, RequestMethod } from '@nestjs/common';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { UsersModule } from './users/users.module';
-import { UsersController } from './users/users.controller';
+import { UsersController } from './users/controllers/users.controller';
 
 @Module({
     modules: [

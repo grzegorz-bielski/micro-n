@@ -4,14 +4,14 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 
 import { RedisClientToken } from '../../constants';
-import { IRedisClientPromisifed } from '../../database/database.interface';
+import { IRedisClientPromisifed } from '../../database/interfaces/database.interface';
 
-export interface IcreateToken {
+export interface IaccessTokenData {
   id: number;
   roles: string;
 }
 
-export interface IrefreshToken {
+export interface IrefreshTokenData {
   id: number;
   refreshToken: string;
 }
@@ -23,10 +23,10 @@ export interface IrefershTokenRedis {
 }
 
 export interface IAuthService {
-  createAccessToken(data: IcreateToken): Promise<string>;
-  refreshAccessToken(data: IrefreshToken): Promise<string>;
-  createRefreshToken(data: IcreateToken): Promise<string>;
-  revokeRefreshToken(data: IrefreshToken): Promise<void>;
+  createAccessToken(data: IaccessTokenData): Promise<string>;
+  refreshAccessToken(data: IrefreshTokenData): Promise<string>;
+  createRefreshToken(data: IaccessTokenData): Promise<string>;
+  revokeRefreshToken(data: IrefreshTokenData): Promise<void>;
   getAllRefreshTokens(id: number): Promise<IrefershTokenRedis[]>;
 }
 
@@ -39,7 +39,7 @@ export class AuthService implements IAuthService {
 
   constructor( @Inject(RedisClientToken) private readonly redisClient: IRedisClientPromisifed ) {}
 
-  public async createAccessToken(data: IcreateToken, options: jwt.SignOptions = this.defaultOptions): Promise<string> {
+  public async createAccessToken(data: IaccessTokenData, options: jwt.SignOptions = this.defaultOptions): Promise<string> {
     let token: string;
 
     try {
@@ -51,7 +51,7 @@ export class AuthService implements IAuthService {
     return token;
   }
 
-  public async refreshAccessToken(data: IrefreshToken): Promise<string> {
+  public async refreshAccessToken(data: IrefreshTokenData): Promise<string> {
     const userId: string = `user-${data.id}`;
 
     // check if id exists in DB
@@ -80,7 +80,7 @@ export class AuthService implements IAuthService {
     return refreshTokens;
   }
 
-  public async createRefreshToken(data: IcreateToken): Promise<string> {
+  public async createRefreshToken(data: IaccessTokenData): Promise<string> {
     const token: string = crypto.randomBytes(20).toString('hex');
     const userId: string = `user-${data.id}`;
     const refreshTokens: IrefershTokenRedis[] = await this.getRefreshTokens(data.id) || [];
@@ -101,7 +101,7 @@ export class AuthService implements IAuthService {
     return token;
   }
 
-  public async revokeRefreshToken(data: IrefreshToken): Promise<void> {
+  public async revokeRefreshToken(data: IrefreshTokenData): Promise<void> {
     const userId: string = `user-${data.id}`;
 
     // check if id exists in DB
@@ -130,13 +130,13 @@ export class AuthService implements IAuthService {
 
     // delete
     try {
-      await this.redisClient.hdelAsync(userId);
+      await this.redisClient.hdelAsync(userId, this.tokenField);
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  public async getRefreshTokens(id: number): Promise<IrefershTokenRedis[]> {
+  private async getRefreshTokens(id: number): Promise<IrefershTokenRedis[]> {
     const userId: string = `user-${id}`;
     let reply: number;
 
@@ -156,7 +156,7 @@ export class AuthService implements IAuthService {
     return null;
   }
 
-  private async getRefreshTokenObj(data: IrefreshToken, refreshTokens: IrefershTokenRedis[] = null): Promise<IrefershTokenRedis> {
+  private async getRefreshTokenObj(data: IrefreshTokenData, refreshTokens: IrefershTokenRedis[] = null): Promise<IrefershTokenRedis> {
     // if tokens weren't provided -> find them
     if (!refreshTokens) {
       refreshTokens = await this.getRefreshTokens(data.id);

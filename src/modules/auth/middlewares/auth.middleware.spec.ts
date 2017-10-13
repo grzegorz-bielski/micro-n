@@ -7,8 +7,6 @@ describe('AuthMiddleware', () => {
   const authService: AuthService =  new AuthService(null);
   let authMiddleware: AuthMiddleware;
 
-  // const token = authService.createAccessToken({ id: userid, roles: })
-
   setUpConfig();
 
   beforeEach(() => {
@@ -101,25 +99,32 @@ describe('AuthMiddleware', () => {
       expect(error).toBeInstanceOf(UnauthorizedException);
     }
 
-    expect(request.header).toBeCalled();
-    expect(request.header).toBeCalledWith('x-auth');
-
   });
 
-  it('should throw verification error if token has expired', async () => {
-  //   const fun = authMiddleware.resolve();
-  //   const createToken = {
-  //     id: 3,
-  //     roles: JSON.stringify(['user']),
-  //   };
-  //   const token = await authService.createAccessToken(createToken, { expiresIn: });
-  //   const request = {
-  //     header: jest.fn(headerType => token),
-  //     user: {
-  //       roles: null,
-  //       id: null,
-  //     },
-  //   };
-  //   const next = () => {};
+  it('should throw verification error for expired token', async () => {
+    const fun = authMiddleware.resolve();
+    const createToken = {
+      id: 3,
+      roles: JSON.stringify(['user']),
+    };
+    const token = await authService.createAccessToken(createToken, { expiresIn: '1s' });
+    const request = {
+      header: jest.fn(headerType => token),
+      user: {
+        roles: null,
+        id: null,
+      },
+    };
+    const next = () => {};
+
+    jest.useFakeTimers();
+
+    try {
+      setTimeout(async () => await fun(request, {}, next), 1001);
+    } catch (error) {
+      expect(error).toBeInstanceOf(UnauthorizedException);
+    }
+
+    jest.runAllTimers();
   });
 });

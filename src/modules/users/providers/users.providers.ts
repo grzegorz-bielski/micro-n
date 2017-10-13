@@ -1,6 +1,6 @@
 import { Connection, Repository } from 'typeorm';
-import { UserEntity } from './user.entity';
-import { UserRepositoryToken, MySQLConnectionToken } from '../constants';
+import { UserEntity } from './../entities/user.entity';
+import { UserRepositoryToken, MySQLConnectionToken } from '../../constants';
 
 export const userProviders = [
   {

@@ -18,7 +18,7 @@ npm-debug.log
 /.nyc_output
 
 #config
-/src/config/config.ts
+/src/config/details
 
 # dist
 /dist

@@ -1,18 +1,23 @@
 import { Middleware, NestMiddleware, ExpressMiddleware } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { UnauthorizedException } from '../../common/exceptions/unauthorized.exception';
-import { IcreateToken } from './../services/auth.service';
+import { IaccessTokenData } from './../services/auth.service';
+
+export interface IparsedData {
+  roles: string[];
+  id: number;
+}
 
 @Middleware()
 export class AuthMiddleware implements NestMiddleware {
   public resolve(): ExpressMiddleware {
     return async (request, response, next) => {
       const token: string = request.header('x-auth');
-      let data: object;
+      let data: IparsedData;
 
       // set request data
       try {
-        data = token ? await this.verify(token) : { roles: ['guest'], id: null };
+        data = token ? await this.verify(token) as IparsedData : { roles: ['guest'], id: null };
       } catch (error) {
         throw new UnauthorizedException(error);
       }
@@ -25,9 +30,9 @@ export class AuthMiddleware implements NestMiddleware {
     };
   }
 
-  private verify(token: string) {
+  public verify(token: string) {
     return new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.JWT_SECRET, (error, decoded: IcreateToken) => {
+      jwt.verify(token, process.env.JWT_SECRET, (error, decoded: IaccessTokenData) => {
         if (error || !decoded) {
           reject(error);
         } else {

@@ -1,12 +1,13 @@
 import { URL } from 'url';
 import * as redis from 'redis';
 import { createConnection } from 'typeorm';
-import { promisifyAll } from '../common/util/promisifyAll';
-import { IRedisClientPromisifed } from './database.interface';
-import { MySQLConnectionToken, RedisClientToken } from '../constants';
-import { UserEntity } from '../users/user.entity';
+import { promisifyAll } from '../../common/util/promisifyAll';
+import { IdatabaseProviders } from './../interfaces/providers.interface';
+import { IRedisClientPromisifed } from './../interfaces/database.interface';
+import { MySQLConnectionToken, RedisClientToken } from '../../constants';
+import { UserEntity } from '../../users/entities/user.entity';
 
-export const databaseProviders = [
+export const databaseProviders: IdatabaseProviders[] = [
   {
     provide: MySQLConnectionToken,
     useFactory: async () => {
@@ -55,7 +56,6 @@ export const databaseProviders = [
           console.log(`Couldn\' connect to the Redis DB from ${db} namespace`);
           console.log('details: ', error);
         }
-        console.log(`Serving Redis DB from namespace: ${db}`);
       }
 
       return redisClient;

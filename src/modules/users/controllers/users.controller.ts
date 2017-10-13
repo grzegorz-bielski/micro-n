@@ -2,22 +2,22 @@ import { Controller, Request, Get, Post, Delete, Body, All, Headers, UseGuards, 
 import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 
-import { SignUpUserDto } from './dto/SignUpUser.dto';
-import { VerificationQueryDto } from './dto/VerificationQuery.dto';
-import { LogInCredentialsDto } from './dto/LogInCredentials.dto';
-import { UserEntity } from './user.entity';
+import { SignUpUserDto } from '../dto/SignUpUser.dto';
+import { VerificationQueryDto } from '../dto/VerificationQuery.dto';
+import { LogInCredentialsDto } from '../dto/LogInCredentials.dto';
+import { UserEntity } from '../entities/user.entity';
 
-import { UsersService } from './services/users.service';
-import { AuthService, IcreateToken } from '../auth/auth.service';
-import { VerificationService } from './services/verification.service';
-import { AvailabilityService } from './services/availability.service';
+import { UsersService } from '../services/users.service';
+import { AuthService, IaccessTokenData } from '../../auth/services/auth.service';
+import { VerificationService } from '../services/verification.service';
+import { AvailabilityService } from '../services/availability.service';
 
-import { RolesGuard } from '../common/guards/roles.guard';
-import { ForbiddenException } from '../common/exceptions/forbidden.exception';
-import { NotFoundException } from '../common/exceptions/notFound.exception';
-import { Roles } from '../common/decorators/roles.decorator';
-import { TimestampInterceptor } from '../common/interceptors/timestamp.interceptor';
-import { SanitizationInterceptor } from './interceptors/sanitization.interceptor';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { ForbiddenException } from '../../common/exceptions/forbidden.exception';
+import { NotFoundException } from '../../common/exceptions/notFound.exception';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { TimestampInterceptor } from '../../common/interceptors/timestamp.interceptor';
+import { SanitizationInterceptor } from '../interceptors/sanitization.interceptor';
 
 interface IResponseUser {
   accessToken: string;
@@ -66,7 +66,7 @@ export class UsersController {
 
     // create user & tokens
     const newUser: UserEntity = await this.usersService.signUp(user);
-    const tokenData: IcreateToken = { roles: newUser.roles, id: newUser.id };
+    const tokenData: IaccessTokenData = { roles: newUser.roles, id: newUser.id };
     const tokens: string[] = await Promise.all([
       this.authService.createAccessToken(tokenData),
       this.authService.createRefreshToken(tokenData),
@@ -93,7 +93,7 @@ export class UsersController {
   public async logIn(@Body() credentials: LogInCredentialsDto): Promise<IResponseUser> {
     // get user & new tokens
     const user: UserEntity = await this.usersService.logIn(credentials);
-    const tokenData: IcreateToken = { roles: user.roles, id: user.id };
+    const tokenData: IaccessTokenData = { roles: user.roles, id: user.id };
     const tokens: string[] = await Promise.all([
       this.authService.createAccessToken(tokenData),
       this.authService.createRefreshToken(tokenData),

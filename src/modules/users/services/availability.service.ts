@@ -1,7 +1,7 @@
 import { Component, Inject } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 import { Repository } from 'typeorm';
-import { UserEntity } from './../user.entity';
+import { UserEntity } from './../entities/user.entity';
 import { UserRepositoryToken } from '../../constants';
 import { ValidationException } from '../../common/exceptions/validation.exception';
 

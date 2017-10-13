@@ -1,9 +1,16 @@
-import variables from './envVariables';
+import variables from './details/variables';
+import config from './details/config';
 
 interface IenvConfig {
   PORT: number;
   DATABASE_URL: string;
   JWT_SECRET: string;
+}
+
+interface Iconfig {
+  test: object;
+  development: object;
+  production: object;
 }
 
 const listenForPromiseRejections = (): void => {
@@ -18,10 +25,16 @@ const setUpEnvVariables = (envConfig: IenvConfig): void => {
 
 export const setUpConfig = (): void => {
   // if there is no NODE_ENV then assume that we are working in development environment
-  const env: string = process.env.NODE_ENV || 'development';
+  // production env should be set up manually'
+  process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+  const env: string = process.env.NODE_ENV;
 
   if (env === 'development' || env === 'test') {
     setUpEnvVariables(variables[env]);
     listenForPromiseRejections();
   }
 };
+
+export const getConfig = (type: string, configuration: Iconfig = config) => (
+  configuration[process.env.NODE_ENV][type]
+);

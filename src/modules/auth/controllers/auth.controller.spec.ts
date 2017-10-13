@@ -1,13 +1,7 @@
-// Set up env variables based on Jest's globals -> jest.json
-import { setUpConfig } from '../../../config/configure';
-import { Test } from '@nestjs/Testing';
-import { DatabaseModule } from '../../database/database.module';
 import { AuthController } from './auth.controller';
 import { AuthService, IrefershTokenRedis } from './../services/auth.service';
-// import { AuthMiddleware } from './auth.middleware';
 
 describe('AuthController', () => {
-  let databaseModule: DatabaseModule;
   let authController: AuthController;
   let authService: AuthService;
 
@@ -31,24 +25,9 @@ describe('AuthController', () => {
 
   ];
 
-  setUpConfig();
-
-  beforeAll(async () => {
-    const authModule = await Test.createTestingModule({
-      modules: [
-        DatabaseModule,
-      ],
-      controllers: [
-        AuthController,
-      ],
-      components: [
-        AuthService,
-      ],
-    }).compile();
-
-    databaseModule = authModule.get<DatabaseModule>(DatabaseModule);
-    authController = authModule.get<AuthController>(AuthController);
-    authService = authModule.get<AuthService>(AuthService);
+  beforeAll( () => {
+    authService = new AuthService(null);
+    authController = new AuthController(authService);
   });
 
   describe('POST /token', () => {
