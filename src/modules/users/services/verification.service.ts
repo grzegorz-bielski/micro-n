@@ -7,7 +7,7 @@ import { IRedisClientPromisifed } from '../../database/interfaces/database.inter
 import { MailService } from '../../mail/services/mail.service';
 import { UsersService } from '../services/users.service';
 
-interface IverificationData {
+export interface IverificationData {
   id: string;
   email: string;
   host: string;
@@ -16,7 +16,7 @@ interface IverificationData {
 
 @Component()
 export class VerificationService {
-  private readonly redisError = 'Couldn\'t send verification email, try again later.';
+  private readonly hashExpiration: number = 1200;
 
   constructor(
     @Inject(RedisClientToken)
@@ -24,20 +24,25 @@ export class VerificationService {
     private readonly mailService: MailService,
   ) {}
 
-  public async sendVerificationEmail(data: IverificationData): Promise<void> {
-    // check if id already exists in DB
-    await this.checkIfExists(data.id);
-
+  public async sendVerificationEmail(data: IverificationData): Promise<string> {
     // generate hash & link
-    const hash = crypto.randomBytes(20).toString('hex');
-    const link = `${data.protocol}://${data.host}/api/users/verify?hash=${hash}`;
+    const hash: string = crypto.randomBytes(20).toString('hex');
+    const link: string = `${data.protocol}://${data.host}/api/users/verify?hash=${hash}`;
+
+    // store { hash: userId } in DB for future check in /users/verify route
+    try {
+      await Promise.all([
+        this.redisClient.setAsync(hash, data.id),
+        this.redisClient.expireAsync(hash, this.hashExpiration),
+      ]);
+    } catch (error) {
+      throw new HttpException('Couldn\'t send verification email, try again later.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     // send email
     await this.mailService.sendVerificationEmail(data.email, link);
 
-    // store { hash: userId } in DB for future check in /users/verify route
-    this.redisClient.set(hash, data.id);
-    this.redisClient.expire(data.id, 1200);
+    return hash;
   }
 
   public async verify(hash: string) {
@@ -47,7 +52,7 @@ export class VerificationService {
     try {
       id = await this.redisClient.getAsync(hash);
     } catch (error) {
-      throw new HttpException(this.redisError, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     if (!id) {
@@ -57,34 +62,31 @@ export class VerificationService {
     return id;
   }
 
-  public async deleteHash(hash) {
-    let reply;
+  public async deleteHash(hash: string): Promise<void> {
+    let reply: number;
 
     // delete hash from DB
     try {
       reply = await this.redisClient.delAsync(hash);
     } catch (error) {
-      throw new HttpException(this.redisError, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     if (reply !== 1) {
-      throw new HttpException(this.redisError, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('No results found', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  private async checkIfExists(data: string): Promise<void> {
-    let info: any;
+  private async checkIfExists(data: string): Promise<number> {
+    let reply: number;
 
     try {
-      info = await this.redisClient.existsAsync(data);
+      reply = await this.redisClient.existsAsync(data);
     } catch (error) {
-      console.log(error);
-      throw new HttpException(this.redisError, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    if (info === 1) {
-      throw new HttpException('Verification for that email has been already requested!', HttpStatus.CONFLICT);
-    }
+    return reply;
   }
 
 }

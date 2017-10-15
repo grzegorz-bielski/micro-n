@@ -37,7 +37,7 @@ describe('AuthService', () => {
     authService = module.get<AuthService>(AuthService);
     authMiddleware = new AuthMiddleware();
 
-    // hack to get private dependency for testing. Don't do it at home.
+    // hack to get easy access to private dependency for testing. Don't do it at home.
     // tslint:disable-next-line
     redisClient = authService['redisClient'];
 

@@ -14,6 +14,9 @@ import { AvailabilityService } from '../services/availability.service';
 
 describe('UsersModule', () => {
   let usersController: UsersController;
+  let usersService: UsersService;
+  let verificationService: VerificationService;
+  let availabilityService: AvailabilityService;
 
   setUpConfig();
 
@@ -36,26 +39,51 @@ describe('UsersModule', () => {
     }).compile();
 
     usersController = module.get<UsersController>(UsersController);
+    usersService = module.get<UsersService>(UsersService);
+    verificationService = module.get<VerificationService>(VerificationService);
+    availabilityService = module.get<AvailabilityService>(AvailabilityService);
   });
 
   describe('verifyUser', () => {
-    //
+    it('should call appropriate services', async () => {
+      // const hash = '42343so23423rrandom';
+      // const id = '3';
+      // const updateStatusMock = jest
+      //   .spyOn(usersService, 'updateStatus');
+      // const verifyMock = jest
+      //   .spyOn(verificationService, 'verify')
+      //   .mockImplementation((hashdata) => id);
+      // const deleteHashMock = jest
+      //   .spyOn(verificationService, 'deleteHash');
+
+      // try {
+      //   const response = await usersController.verifyUser({ hash });
+
+      //   // response is just a stub for now, so there no specific tests for it for now
+      //   expect(response).toBeDefined();
+      //   expect(verifyMock).toBeCalledWith(hash);
+      //   expect(updateStatusMock).toBeCalledWith(id, true);
+      //   expect(deleteHashMock).toBeCalledWith(hash);
+      // } catch (error) {
+      //   console.log(error);
+      // }
+    });
   });
 
-  describe('signUp', () => {
-    ///
-  });
+  // describe('signUp', () => {
+  //   ///
+  // });
 
-  describe('logIn', () => {
-    //
-  });
+  // describe('logIn', () => {
+  //   //
+  // });
 
-  describe('logOut', () => {
-    //
-  });
+  // describe('logOut', () => {
+  //   //
+  // });
 
-  describe('logOutAll', () => {
-    //
-  });
+  // describe('logOutAll', () => {
+  //   //
+  // });
 
 });

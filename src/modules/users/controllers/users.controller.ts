@@ -45,12 +45,12 @@ export class UsersController {
   @Get('/verify')
   public async verifyUser( @Query() query: VerificationQueryDto ): Promise<string> {
     // verify user
-    const id = await this.verificationService.verify(query.hash);
-    // update user status
-    await this.usersService.updateStatus(id, true);
-    // delete hash
-    this.verificationService.deleteHash(query.hash);
-
+    const id: string = await this.verificationService.verify(query.hash);
+    // update user status & delete hash
+    await Promise.all([
+      this.usersService.updateStatus(id, true),
+      this.verificationService.deleteHash(query.hash),
+    ]);
     // TODO: render nice verification msg
     return 'verified';
   }
