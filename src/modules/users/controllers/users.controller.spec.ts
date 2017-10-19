@@ -1,89 +1,207 @@
 import { Test } from '@nestjs/testing';
+import { TestingModule } from '@nestjs/testing/testing-module';
 import { setUpConfig } from '../../../config/configure';
 
 import { DatabaseModule } from '../../database/database.module';
 import { AuthModule } from '../../auth/auth.module';
 import { MailModule } from '../../mail/mail.module';
 
+import { NotFoundException } from '../../common/exceptions/notFound.exception';
+import { SignUpUserDto } from '../dto/SignUpUser.dto';
+import { LogInCredentialsDto } from '../dto/LogInCredentials.dto';
 import { userProviders } from './../providers/users.providers';
 import { UsersService } from '../services/users.service';
-import { UsersController } from './users.controller';
-import { AuthService} from '../../auth/services/auth.service';
+import { UsersController} from './users.controller';
+import { AuthService, IaccessTokenData } from '../../auth/services/auth.service';
 import { VerificationService } from '../services/verification.service';
 import { AvailabilityService } from '../services/availability.service';
 
-describe('UsersModule', () => {
+describe('UsersController', () => {
+  const userMock: SignUpUserDto = {
+    name: 'kek',
+    email: 'kek@2k2.com',
+    password: '1333d',
+    description: '34',
+  };
+  const dbUserMock = {
+    id: 34234,
+    email: userMock.email,
+    roles: JSON.stringify(['user']),
+  };
+  let testingModule: TestingModule;
   let usersController: UsersController;
   let usersService: UsersService;
   let verificationService: VerificationService;
   let availabilityService: AvailabilityService;
+  let authService: AuthService;
 
   setUpConfig();
 
-  beforeEach(async () => {
-    const module = await Test.createTestingModule({
-      modules: [
-        DatabaseModule,
-        AuthModule,
-        MailModule,
-    ],
-    controllers: [
-        UsersController,
-    ],
-    components: [
-        ...userProviders,
-        AvailabilityService,
-        VerificationService,
-        UsersService,
-    ],
+  beforeAll(async () => {
+    testingModule = await Test.createTestingModule({
+        modules: [
+          DatabaseModule,
+          AuthModule,
+          MailModule,
+      ],
+      controllers: [
+          UsersController,
+      ],
+      components: [
+          ...userProviders,
+          AvailabilityService,
+          VerificationService,
+          UsersService,
+      ],
     }).compile();
+  });
 
-    usersController = module.get<UsersController>(UsersController);
-    usersService = module.get<UsersService>(UsersService);
-    verificationService = module.get<VerificationService>(VerificationService);
-    availabilityService = module.get<AvailabilityService>(AvailabilityService);
+  beforeEach(() => {
+    const authModule = testingModule.select<AuthModule>(AuthModule);
+
+    authService = authModule.get<AuthService>(AuthService);
+    usersController = testingModule.get<UsersController>(UsersController);
+    usersService = testingModule.get<UsersService>(UsersService);
+    verificationService = testingModule.get<VerificationService>(VerificationService);
+    availabilityService = testingModule.get<AvailabilityService>(AvailabilityService);
   });
 
   describe('verifyUser', () => {
     it('should call appropriate services', async () => {
-      // const hash = '42343so23423rrandom';
-      // const id = '3';
-      // const updateStatusMock = jest
-      //   .spyOn(usersService, 'updateStatus');
-      // const verifyMock = jest
-      //   .spyOn(verificationService, 'verify')
-      //   .mockImplementation((hashdata) => id);
-      // const deleteHashMock = jest
-      //   .spyOn(verificationService, 'deleteHash');
+      const hash = '42343so23423rrandom';
+      const id = '3';
 
-      // try {
-      //   const response = await usersController.verifyUser({ hash });
+      // spies
+      const updateStatusMock = jest
+        .spyOn(usersService, 'updateStatus')
+        .mockImplementation(() => {});
+      const verifyMock = jest.fn((hashdata) => id);
+      const deleteMock = jest.fn(() => {});
+      verificationService.verify = verifyMock;
+      verificationService.deleteHash = deleteMock;
 
-      //   // response is just a stub for now, so there no specific tests for it for now
-      //   expect(response).toBeDefined();
-      //   expect(verifyMock).toBeCalledWith(hash);
-      //   expect(updateStatusMock).toBeCalledWith(id, true);
-      //   expect(deleteHashMock).toBeCalledWith(hash);
-      // } catch (error) {
-      //   console.log(error);
-      // }
+      const response: string = await usersController.verifyUser({ hash });
+
+      expect(response).toBeDefined();
+      expect(updateStatusMock).toBeCalledWith(id, true);
+      expect(verifyMock).toBeCalledWith(hash);
+      expect(deleteMock).toBeCalledWith(hash);
     });
   });
 
-  // describe('signUp', () => {
-  //   ///
-  // });
+  describe('signUp', () => {
+    it('should call appropriate services', async () => {
+      const requestMock = {
+        get: jest.fn(host => 'localhost'),
+        protocol: 'http',
+      };
 
-  // describe('logIn', () => {
-  //   //
-  // });
+      // spies
+      const testMock = jest
+        .spyOn(availabilityService, 'test')
+        .mockImplementation(() => {});
+      const signUpMock = jest
+        .spyOn(usersService, 'signUp')
+        .mockImplementation(() => dbUserMock);
+      const verificationMock = jest
+        .spyOn(verificationService, 'sendVerificationEmail')
+        .mockImplementation(() => {});
 
-  // describe('logOut', () => {
-  //   //
-  // });
+      await usersController.signUp(userMock, requestMock);
 
-  // describe('logOutAll', () => {
-  //   //
-  // });
+      expect(availabilityService.test).toBeCalled();
+      expect(signUpMock).toBeCalledWith(userMock);
+      expect(verificationService.sendVerificationEmail).toBeCalled();
+      expect(requestMock.get).toBeCalledWith('host');
+    });
+  });
+
+  describe('logIn', () => {
+    it('should call appropriate services', async () => {
+      const credetentialsMock: LogInCredentialsDto = {
+        email: userMock.email,
+        password: userMock.password,
+      };
+      const tokenData: IaccessTokenData = {
+        roles: dbUserMock.roles,
+        id: dbUserMock.id,
+      };
+      const accessTokenMock: string = '2321312312';
+      const refreshTokenMock: string = '1232342355';
+
+      // spies
+      const logInMock = jest
+        .spyOn(usersService, 'logIn')
+        .mockImplementation(() => dbUserMock);
+      const createAccessTokenMock = jest.fn(() => accessTokenMock);
+      const createRefreshTokenMock = jest.fn(() => refreshTokenMock);
+      authService.createAccessToken = createAccessTokenMock;
+      authService.createRefreshToken = createRefreshTokenMock;
+
+      const response = await usersController.logIn(credetentialsMock);
+
+      expect(logInMock).toBeCalledWith(credetentialsMock);
+      expect(createAccessTokenMock).toBeCalledWith(tokenData);
+      expect(createRefreshTokenMock).toBeCalledWith(tokenData);
+
+      expect(response).toBeDefined();
+      expect(response).toEqual({
+        accessToken: accessTokenMock,
+        refreshToken: refreshTokenMock,
+        user: dbUserMock,
+      });
+    });
+  });
+
+  describe('logOut', () => {
+    it('should call appropriate service', async () => {
+      const request = {
+        user: { id: 3 },
+      };
+      const headers = {
+        'x-refresh': 'mockk',
+      };
+
+      const revokeMock = jest
+        .spyOn(authService, 'revokeRefreshToken')
+        .mockImplementation(() => {});
+
+      await usersController.logOut(request, headers);
+
+      expect(revokeMock).toBeCalled();
+      expect(revokeMock).toBeCalledWith({
+        id: request.user.id,
+        refreshToken: headers['x-refresh'],
+      });
+    });
+  });
+
+  describe('logOutAll', () => {
+    it('should call appropriate service', async () => {
+      const request = {
+        user: { id: 3 },
+      };
+
+      const revokeAllMock = jest
+        .spyOn(authService, 'revokeAllRefreshTokens')
+        .mockImplementation(() => {});
+
+      await usersController.logOutAll(request);
+
+      expect(revokeAllMock).toBeCalledWith(request.user.id);
+    });
+  });
+
+  describe('all', () => {
+    it('should throw NotFoundException', async () => {
+      const request = {
+        route: { path: '/*' },
+      };
+
+      expect(() => {
+        usersController.all(request);
+      }).toThrow(NotFoundException);
+    });
+  });
 
 });

@@ -1,18 +1,19 @@
-import { setUpConfig } from './config/configure';
+import * as compression from 'compression';
+import * as bodyParser from 'body-parser';
+import * as helmet from 'helmet';
+import * as express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
+
+import { setUpConfig } from './config/configure';
 import { ApplicationModule } from './modules/app.module';
 import { ValidationPipe } from './modules/common/pipes/validation.pipe';
 import { TimestampInterceptor } from './modules/common/interceptors/timestamp.interceptor';
 import { HttpExceptionFilter } from './modules/common/filters/httpException.filter';
 
-import * as compression from 'compression';
-import * as bodyParser from 'body-parser';
-import * as helmet from 'helmet';
+setUpConfig();
 
-async function bootstrap() {
-  const app: INestApplication = await NestFactory.create(ApplicationModule);
-
+export const configureApp = (app: INestApplication) => {
   // express middleware
   app.use(helmet());
   app.use(bodyParser.json());
@@ -24,8 +25,12 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TimestampInterceptor());
 
-  await app.listen(3000);
-}
+  return app;
+};
 
-setUpConfig();
-bootstrap();
+export const startServer: Promise<void> = (async () => {
+  const server: express.Express = express();
+  const app: INestApplication = configureApp(await NestFactory.create(ApplicationModule, server));
+
+  await app.listen(Number.parseInt(process.env.PORT));
+})();

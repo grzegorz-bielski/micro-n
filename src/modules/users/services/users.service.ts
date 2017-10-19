@@ -16,9 +16,9 @@ export class UsersService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  public getAll(): Promise<UserEntity[]> {
-    return this.userRepository.find();
-  }
+  // public getAll(): Promise<UserEntity[]> {
+  //   return this.userRepository.find();
+  // }
 
   public signUp(user: User): Promise<UserEntity> {
     const newUser: UserEntity & User = Object.assign(new UserEntity(), user);
@@ -27,19 +27,22 @@ export class UsersService {
 
   public async logIn(credentials: Credentials): Promise<UserEntity> {
     const user: UserEntity = await this.userRepository.findOne({ email: credentials.email});
-    const isPasswordValid: boolean = await bcrypt.compare(credentials.password, user.password);
-
-    if (!isPasswordValid) {
-      throw new HttpException('Invalid password.', HttpStatus.UNAUTHORIZED);
+    if (!user) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     if (!user.isActive) {
-      throw new HttpException('Inactive account.', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('Inactive account', HttpStatus.UNAUTHORIZED);
+    }
+
+    const isPasswordValid: boolean = await bcrypt.compare(credentials.password, user.password);
+    if (!isPasswordValid) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
 
     return user;
   }
 
-  public updateStatus(id: string, status: boolean) {
+  public updateStatus(id: string | number, status: boolean): Promise<void> {
     return this.userRepository.updateById(id, { isActive: status } );
   }
 

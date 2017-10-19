@@ -6,7 +6,8 @@ import 'rxjs/add/operator/map';
 export class SanitizationInterceptor implements NestInterceptor {
   intercept(dataOrRequest, context: ExecutionContext, stream$: Observable<any>): Observable<any> {
     return stream$.map(
-      ({ accessToken, refreshToken, user }) => {
+      (data) => {
+        const { accessToken, refreshToken, user } = data;
         const sanitizedUser = Object.assign({}, user);
         delete sanitizedUser.password;
 

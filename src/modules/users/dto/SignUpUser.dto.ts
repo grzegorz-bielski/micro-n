@@ -11,7 +11,7 @@ export class SignUpUserDto {
   @IsString()
   readonly password: string;
 
-  @IsOptional()
   @IsString()
-  readonly description: string;
+  @IsOptional()
+  readonly description?: string;
 }

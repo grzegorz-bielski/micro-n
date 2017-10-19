@@ -10,12 +10,20 @@ import { AvailabilityService } from '../services/availability.service';
 import { ValidationException } from '../../common/exceptions/validation.exception';
 
 describe('AvailabilityService', () => {
+  const flushDb = () => (
+    userRepository
+      .createQueryBuilder('user')
+      .delete()
+      .from(UserEntity)
+      .execute()
+  );
   const user: User = {
     name: 'kek',
     email: 'kek@example.com',
     password: 'kekeke',
     description: 'special snowflake',
   };
+  let dbUser: UserEntity;
   let availabilityService: AvailabilityService;
   let userRepository: Repository<UserEntity>;
 
@@ -39,17 +47,30 @@ describe('AvailabilityService', () => {
     userRepository = availabilityService['userRepository'];
   });
 
+  afterAll(async () => {
+    await flushDb();
+  });
+
   beforeEach(async () => {
-    // ??????????
-    // await userRepository.query('DROP TABLE user_entity');
-    await userRepository.save(
-      Object.assign(new UserEntity(), user),
-    );
+    await flushDb();
+
+    // populate
+    dbUser = await userRepository.save(Object.assign(new UserEntity(), user));
   });
 
   describe('test', () => {
     it('should throw ValidaitonException if user with given credentials is found', async () => {
+      await expect(availabilityService.test(user, [
+        { property: 'name', value: user.name },
+        { property: 'email', value: user.email },
+      ])).rejects.toBeInstanceOf(ValidationException);
+    });
 
+    it('should\'t throw an error if credentials are available', async () => {
+      await expect(availabilityService.test(user, [
+        { property: 'name', value: 'kek2' },
+        { property: 'email', value: 'kek2@example.com' },
+      ])).resolves.not.toBeInstanceOf(ValidationException);
     });
   });
 

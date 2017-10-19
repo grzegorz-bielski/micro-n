@@ -15,7 +15,7 @@ interface Iconfig {
 
 const listenForPromiseRejections = (): void => {
   process.on('unhandledRejection', (reason, promise) => {
-    console.log(`Unhandled Rejection at: Promise ${promise} reason: ${reason}`);
+    console.log(`Unhandled Rejection at: Promise ${JSON.stringify(promise)} reason: ${JSON.stringify(reason)}`);
   });
 };
 

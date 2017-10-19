@@ -25,7 +25,10 @@ export class UserEntity {
   @Column({ length: 100 })
   public password: string;
 
-  @Column({ length: 500 })
+  @Column({
+    length: 500,
+    default: 'Write something about yourself.',
+  })
   public description: string;
 
   @Column({
@@ -50,7 +53,7 @@ export class UserEntity {
     }
   }
 
-  // return default roles to service;
+  // return default values to the service
   @AfterInsert()
   public addDefault() {
     if (!this.roles) {

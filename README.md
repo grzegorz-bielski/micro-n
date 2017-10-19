@@ -1,20 +1,23 @@
 [![Nest Logo](http://kamilmysliwiec.com/public/nest-logo.png)](http://nestjs.com/)
 
-The [Nest](https://github.com/kamilmysliwiec/nest) framework starter repository. 
+# Micro-N - Microblogging & Chat API 
 
-## Installation
+**Currently in active development.**
+
+Being build with
+[Nest framework](https://github.com/kamilmysliwiec/nest), TypeORM (MySQL), Redis, Nodemailer, JWT, class-validator and Jest.
+
+## Installation & start
 
 ```
 $ npm install
-```
-
-## Start
-
-```
 $ npm run start
 ```
 
-## People
+## Tests
 
-- Author - [Kamil Myśliwiec](http://kamilmysliwiec.com)
-- Website - [http://nestjs.com](http://nestjs.com/)
+```
+$ npm run test:watch
+$ npm run e2e
+```
+
