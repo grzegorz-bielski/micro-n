@@ -91,6 +91,7 @@ describe('UsersController', () => {
 
   describe('signUp', () => {
     it('should call appropriate services', async () => {
+      const hashMock = 'wrwerr23r2';
       const requestMock = {
         get: jest.fn(host => 'localhost'),
         protocol: 'http',
@@ -105,14 +106,43 @@ describe('UsersController', () => {
         .mockImplementation(() => dbUserMock);
       const verificationMock = jest
         .spyOn(verificationService, 'sendVerificationEmail')
-        .mockImplementation(() => {});
+        .mockImplementation(() => ({ hash: hashMock }));
 
-      await usersController.signUp(userMock, requestMock);
+      const { hash } = await usersController.signUp(userMock, requestMock) as { hash: string };
 
+      expect(hash).toBe(hashMock);
       expect(availabilityService.test).toBeCalled();
       expect(signUpMock).toBeCalledWith(userMock);
       expect(verificationService.sendVerificationEmail).toBeCalled();
       expect(requestMock.get).toBeCalledWith('host');
+    });
+
+    it('shouldn\'t return hash when in env other than test', async () => {
+      process.env.NODE_ENV = 'production';
+
+      const hashMock = 'wrwerr23r2';
+      const requestMock = {
+        get: jest.fn(host => 'localhost'),
+        protocol: 'http',
+      };
+
+      // spies
+      const testMock = jest
+        .spyOn(availabilityService, 'test')
+        .mockImplementation(() => {});
+      const signUpMock = jest
+        .spyOn(usersService, 'signUp')
+        .mockImplementation(() => dbUserMock);
+      const verificationMock = jest
+        .spyOn(verificationService, 'sendVerificationEmail')
+        .mockImplementation(() => ({ hash: hashMock }));
+
+      const reply = await usersController.signUp(userMock, requestMock);
+
+      expect(reply).toBeUndefined();
+
+      process.env.NODE_ENV = 'test';
+
     });
   });
 

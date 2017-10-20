@@ -19,6 +19,8 @@ describe('UsersModule', () => {
   let availabilityService: AvailabilityService;
   let verificationService: VerificationService;
 
+  setUpConfig();
+
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       modules: [

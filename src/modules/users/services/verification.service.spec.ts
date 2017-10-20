@@ -132,7 +132,7 @@ describe('VerificationService', () => {
     });
 
     it('should store hash in DB as a `hash: userId` ', async () => {
-      const emailHash = await verificationService.sendVerificationEmail(verificationData);
+      const { hash: emailHash } = await verificationService.sendVerificationEmail(verificationData);
       let reply: string;
 
       try {
@@ -148,7 +148,7 @@ describe('VerificationService', () => {
     });
 
     it('should set expiration on created hashes', async () => {
-      const emailHash = await verificationService.sendVerificationEmail(verificationData);
+      const { hash: emailHash } = await verificationService.sendVerificationEmail(verificationData);
       const timeToLive = await redisClient.ttlAsync(emailHash);
 
       expect(timeToLive).toBeDefined();

@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { Transporter, getTestMessageUrl } from 'nodemailer';
+import { Transporter } from 'nodemailer';
 import { MailService } from './mail.service';
 import { setUpConfig } from '../../../config/configure';
 import { mailProviders } from '../providers/mail.providers';
@@ -30,7 +30,6 @@ describe('MailService', () => {
 
       expect(info).toBeDefined();
       expect(info).not.toBe(null);
-      console.log(`sendEmail preview: ${getTestMessageUrl(info)}`);
     });
   });
 
@@ -43,7 +42,6 @@ describe('MailService', () => {
 
       expect(info).toBeDefined();
       expect(info).not.toBe(null);
-      console.log(`sendVerificationEmail preview: ${getTestMessageUrl(info)}`);
     });
   });
 });

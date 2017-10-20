@@ -56,7 +56,7 @@ export class UsersController {
   // }
 
   @Post('/signup')
-  public async signUp(@Body() user: SignUpUserDto, @Request() request): Promise<void> {
+  public async signUp(@Body() user: SignUpUserDto, @Request() request): Promise<void | { hash: string }> {
     // check if given credentials are available
     await this.availabilityService.test(user, [
       { property: 'name', value: user.name },
@@ -67,12 +67,17 @@ export class UsersController {
     const newUser: UserEntity = await this.usersService.signUp(user);
 
     // send verification email
-    await this.verificationService.sendVerificationEmail({
+    const { hash } = await this.verificationService.sendVerificationEmail({
       id: newUser.id.toString(),
       email: newUser.email,
       host: request.get('host'),
       protocol: request.protocol,
     });
+
+    // return hash in test env
+    if (process.env.NODE_ENV === 'test') {
+      return { hash };
+    }
   }
 
   @Get('/verify')

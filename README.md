@@ -18,6 +18,6 @@ $ npm run start
 
 ```
 $ npm run test:watch
-$ npm run e2e
+$ npm run e2e:watch
 ```
 

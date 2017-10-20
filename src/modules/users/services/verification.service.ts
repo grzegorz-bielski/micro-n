@@ -1,5 +1,6 @@
 import { Component, Inject, HttpStatus } from '@nestjs/common';
 import { HttpException } from '@nestjs/core';
+import { SentMessageInfo } from 'nodemailer';
 import * as crypto from 'crypto';
 
 import { RedisClientToken } from '../../constants';
@@ -24,7 +25,10 @@ export class VerificationService {
     private readonly mailService: MailService,
   ) {}
 
-  public async sendVerificationEmail(data: IverificationData): Promise<string> {
+  public async sendVerificationEmail(data: IverificationData): Promise<{
+    hash: string,
+    info: SentMessageInfo,
+  }> {
     // generate hash & link
     const hash: string = crypto.randomBytes(20).toString('hex');
     const link: string = `${data.protocol}://${data.host}/api/users/verify?hash=${hash}`;
@@ -39,10 +43,11 @@ export class VerificationService {
       throw new HttpException('Couldn\'t send verification email, try again later.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // send email
-    await this.mailService.sendVerificationEmail(data.email, link);
-
-    return hash;
+    // send email & return info
+    return {
+      hash,
+      info: await this.mailService.sendVerificationEmail(data.email, link),
+    };
   }
 
   public async verify(hash: string) {
