@@ -7,6 +7,7 @@ import {
   Body,
   All,
   Headers,
+  HttpCode,
   UseGuards,
   Response,
   HttpStatus,
@@ -29,7 +30,6 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { ForbiddenException } from '../../common/exceptions/forbidden.exception';
 import { NotFoundException } from '../../common/exceptions/notFound.exception';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { TimestampInterceptor } from '../../common/interceptors/timestamp.interceptor';
 import { SanitizationInterceptor } from '../interceptors/sanitization.interceptor';
 
 export interface IResponseUser {
@@ -94,6 +94,7 @@ export class UsersController {
   }
 
   @Post('/login')
+  @HttpCode(200)
   @UseInterceptors(SanitizationInterceptor)
   public async logIn(@Body() credentials: LogInCredentialsDto): Promise<IResponseUser> {
     // get user

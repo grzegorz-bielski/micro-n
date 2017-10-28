@@ -1,7 +1,6 @@
 import * as request from 'supertest';
 import * as express from 'express';
 import * as faker from 'faker';
-import * as crypto from 'crypto';
 import { Test } from '@nestjs/testing';
 import { Repository } from 'typeorm';
 import { User } from '../src/modules/users/interfaces/user.interface';
@@ -12,6 +11,7 @@ import { SignUpUserDto } from '../src/modules/users/dto/SignUpUser.dto';
 import { UserEntity } from '../src/modules/users/entities/user.entity';
 import { UsersService } from '../src/modules/users/services/users.service';
 import { VerificationService } from '../src/modules/users/services/verification.service';
+import { NotFoundException } from '../src/modules/common/exceptions/notFound.exception';
 
 // bigger timeout to populate db
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
@@ -19,8 +19,9 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 describe('Users', () => {
   const prefix = 'api';
   const server = express();
-  const users: UserEntity[] = [];
   const mockUsersNumber: number = 5;
+  const users: User[] = [];
+  let dbUsers: UserEntity[] = [];
   let userRepository: Repository<UserEntity>;
   let usersService: UsersService;
   let verificationService: VerificationService;
@@ -37,9 +38,7 @@ describe('Users', () => {
       userData = Object.assign(userData, { isActive: true });
     }
 
-    users.push(
-      Object.assign(new UserEntity(), userData),
-    );
+    users.push(userData);
   }
 
   const flushDb = () => (
@@ -51,7 +50,7 @@ describe('Users', () => {
   );
 
   const populateDb = () => (
-    userRepository.save(users)
+    userRepository.save(users.map(user => Object.assign(new UserEntity(), user)))
   );
 
   beforeAll(async () => {
@@ -73,7 +72,7 @@ describe('Users', () => {
     userRepository = usersService['userRepository'];
 
     await flushDb();
-    await populateDb();
+    dbUsers = await populateDb();
   });
 
   afterAll(async () => {
@@ -176,14 +175,91 @@ describe('Users', () => {
   });
 
   describe('POST /login', () => {
-    it('should successfully log in user', () => {
-      //
+    it('should successfully log in user', async () => {
+      const user = users[0];
+
+      const { body } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: user.email, password: user.password })
+        .expect(200);
+
+      expect(typeof body.accessToken).toBe('string');
+      expect(typeof body.refreshToken).toBe('string');
+      expect(body.user).toBeDefined();
+      expect(body.user.name).toBe(user.name);
+      expect(body.user).toEqual(body.user);
+    });
+
+    it('should reject invalid credentials', async () => {
+      const user = users[0];
+
+      const { body } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: user.email, password: 'randompasss' })
+        .expect(401);
+
+      expect(body.type).toBe('HttpException');
+    });
+
+    it('should reject inactive user', async () => {
+      const user = users[1];
+
+      const { body } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: user.email, password: user.email })
+        .expect(401);
+
+      expect(body.type).toBe('HttpException');
     });
   });
 
   describe('DELETE /logout', () => {
-    it('should successfully log out user', () => {
-      //
+    it('should successfully log out user', async () => {
+      const user = users[0];
+
+      const { body } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: user.email, password: user.password })
+        .expect(200);
+
+      await request(server)
+        .delete(`/${prefix}/users/logout`)
+        .set('x-refresh', body.refreshToken)
+        .set('x-auth', body.accessToken)
+        .expect(200);
+    });
+  });
+
+  describe('DELETE /logoutall', () => {
+    it('should successfully log out user from all sessions', async () => {
+      const user = users[0];
+
+      const { body } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: user.email, password: user.password })
+        .expect(200);
+
+      await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: user.email, password: user.password })
+        .expect(200);
+
+      await request(server)
+        .delete(`/${prefix}/users/logoutall`)
+        .set('x-refresh', body.refreshToken)
+        .set('x-auth', body.accessToken)
+        .expect(200);
+
+    });
+  });
+
+  describe('ALL /*', () => {
+    it('should throw NotFoundException', async () => {
+      const response = await request(server)
+        .get(`/${prefix}/users/fefwekfwefwe`);
+
+      const text = JSON.parse(response.text);
+      expect(text.type).toBe('HttpException');
     });
   });
 });

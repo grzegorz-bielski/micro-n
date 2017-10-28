@@ -1,19 +1,22 @@
 import { URL } from 'url';
 import * as redis from 'redis';
-import { createConnection } from 'typeorm';
+import { createConnection, Connection } from 'typeorm';
 import { promisifyAll } from '../../common/util/promisifyAll';
 import { IdatabaseProviders } from './../interfaces/providers.interface';
 import { IRedisClientPromisifed } from './../interfaces/database.interface';
 import { MySQLConnectionToken, RedisClientToken } from '../../constants';
 import { UserEntity } from '../../users/entities/user.entity';
+import { PostEntity } from '../../posts/entities/post.entity';
+
+let mysqlConnectionCounter = 0;
 
 export const databaseProviders: IdatabaseProviders[] = [
   {
     provide: MySQLConnectionToken,
     useFactory: async () => {
       const mysqlConfig = new URL(process.env.MYSQL_URL);
-
-      return await createConnection({
+      const connection: Connection = await createConnection({
+        name: `connection-${mysqlConnectionCounter}`,
         type: 'mysql',
         host: mysqlConfig.hostname,
         port: Number.parseInt(mysqlConfig.port),
@@ -22,9 +25,13 @@ export const databaseProviders: IdatabaseProviders[] = [
         database: mysqlConfig.pathname.substr(1),
         entities: [
           UserEntity,
+          PostEntity,
         ],
         synchronize: true,
       });
+
+      mysqlConnectionCounter++;
+      return connection;
     },
   },
   {

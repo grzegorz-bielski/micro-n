@@ -1,7 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert, AfterInsert } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BeforeInsert,
+  AfterInsert,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { HttpException } from '@nestjs/core';
 import { HttpStatus } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+
+import { PostEntity } from '../../posts/entities/post.entity';
 
 const defaultRole = JSON.stringify(['user']);
 
@@ -10,20 +21,25 @@ export class UserEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @Column({
-    unique: true,
-    length: 100,
-  })
+  @Column({ unique: true, length: 100 })
   public name: string;
 
-  @Column({
-    unique: true,
-    length: 100,
-  })
+  @Column({ unique: true, length: 100 })
   public email: string;
 
   @Column({ length: 100 })
   public password: string;
+
+  @OneToMany(type => PostEntity, postEntity => postEntity.user)
+  public posts: PostEntity[];
+
+  // metadata
+
+  @CreateDateColumn()
+  public createdAt: string;
+
+  @UpdateDateColumn()
+  public updatedAt: string;
 
   @Column({
     length: 500,
@@ -31,15 +47,13 @@ export class UserEntity {
   })
   public description: string;
 
-  @Column({
-    default: defaultRole,
-  })
+  @Column({ default: defaultRole })
   public roles: string;
 
-  @Column({
-    default: false,
-  })
+  @Column({ default: false })
   public isActive: boolean;
+
+  // event listeners
 
   // hash password before putting to the DB
   @BeforeInsert()
@@ -60,6 +74,8 @@ export class UserEntity {
       this.roles = defaultRole;
     }
 
-    this.isActive = false;
+    if (!this.isActive) {
+      this.isActive = false;
+    }
   }
 }

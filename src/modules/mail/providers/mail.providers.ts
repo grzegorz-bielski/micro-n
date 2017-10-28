@@ -15,38 +15,39 @@ export const mailProviders: ImailProviders[] = [
   {
     provide: MailTransportToken,
     useFactory: async () => {
-      let options: smtpTransport.SmtpOptions;
+      let transporter: nodemailer.Transporter;
+
       if (process.env.NODE_ENV === 'test') {
         try {
-          const account = await nodemailer.createTestAccount();
-          options = {
+          const { auth } = getConfig('mail');
+          transporter = nodemailer.createTransport({
             host: 'smtp.ethereal.email',
             port: 587,
             secure: false,
             auth: {
-                user: account.user,
-                pass: account.pass,
+                user: auth.user,
+                pass: auth.pass,
             },
-          };
+          });
         } catch (error) {
           console.log(error);
         }
       } else {
-        const config = getConfig('mail');
-        options = {
+        const { user, id, secret, refreshToken, accessToken } = getConfig('mail');
+        transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
             type: 'OAuth2',
-            user: config.user,
-            clientId: config.id,
-            clientSecret: config.secret,
-            refreshToken: config.refreshToken,
-            accessToken: config.accessToken,
+            user,
+            clientId: id,
+            clientSecret: secret,
+            refreshToken,
+            accessToken,
           },
-        };
+        });
       }
 
-      return nodemailer.createTransport(options);
+      return transporter;
     },
   },
 ];
