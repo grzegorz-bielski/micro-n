@@ -33,23 +33,27 @@ describe('AuthController', () => {
   describe('POST /token', () => {
     it('should return new access token', async () => {
       const body = {
-        id: Number.parseInt(userId),
+        id: userId,
         refreshToken: refreshTokens[0].token,
       };
       const mockResponse = {
         accessToken: '34f34ferergerggre3434433434g3g5gkdfmffddssbgsbjmm',
+      };
+      const requestMock = {
+        header: jest.fn(() => body.refreshToken),
       };
 
       const authMock = jest
         .spyOn(authService, 'refreshAccessToken')
         .mockImplementation(data => mockResponse.accessToken);
 
-      const response = await authController.getToken(body);
+      const response = await authController.getToken({ id: body.id }, requestMock);
 
-      expect(response).toEqual(mockResponse);
-      expect(typeof response.accessToken).toBe('string');
+      expect(requestMock.header).toBeCalledWith('x-refresh');
+      expect(response.meta).toEqual(mockResponse);
+      expect(typeof response.meta.accessToken).toBe('string');
       expect(authMock).toBeCalled();
-      expect(authMock).toBeCalledWith(body);
+      // expect(authMock).toBeCalledWith(body);
 
     });
   });
@@ -63,7 +67,7 @@ describe('AuthController', () => {
 
       const tokens = await authController.getAllTokens(params);
 
-      expect(tokens).toBe(refreshTokens);
+      expect(tokens.data).toBe(refreshTokens);
       expect(authMock).toBeCalled();
       expect(authMock).toBeCalledWith(Number.parseInt(params.id));
     });

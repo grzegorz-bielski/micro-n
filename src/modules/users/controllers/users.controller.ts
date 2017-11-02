@@ -81,7 +81,7 @@ export class UsersController {
   }
 
   @Get('/verify')
-  public async verifyUser( @Query() query: VerificationQueryDto ): Promise<string> {
+  public async verifyUser( @Query() query: VerificationQueryDto ) {
     // verify user
     const id: string = await this.verificationService.verify(query.hash);
     // update user status & delete hash
@@ -96,7 +96,7 @@ export class UsersController {
   @Post('/login')
   @HttpCode(200)
   @UseInterceptors(SanitizationInterceptor)
-  public async logIn(@Body() credentials: LogInCredentialsDto): Promise<IResponseUser> {
+  public async logIn(@Body() credentials: LogInCredentialsDto) {
     // get user
     const user: UserEntity = await this.usersService.logIn(credentials);
 
@@ -109,9 +109,13 @@ export class UsersController {
 
     // send user & tokens to sanitization interceptor
     return {
-      accessToken: tokens[0],
-      refreshToken: tokens[1],
-      user,
+      data: {
+        user,
+      },
+      meta: {
+        accessToken: tokens[0],
+        refreshToken: tokens[1],
+      },
     };
   }
 

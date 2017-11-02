@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { setUpConfig } from '../../../config/configure';
 
+import { setUpConfig } from '../../../config/configure';
 import { User } from './../interfaces/user.interface';
 import { Repository } from 'typeorm';
 import { UserEntity } from './../entities/user.entity';

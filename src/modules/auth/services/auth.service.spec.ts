@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
+import { promisify } from 'util';
 import { Test } from '@nestjs/testing';
 import { HttpException } from '@nestjs/core';
 import { UnauthorizedException } from '../../common/exceptions/unauthorized.exception';
@@ -9,6 +10,9 @@ import { AuthService, IrefershTokenRedis, IaccessTokenData } from '../services/a
 import { DatabaseModule } from '../../database/database.module';
 import { RedisClientToken } from '../../constants';
 import { IRedisClientPromisifed } from '../../database/interfaces/database.interface';
+
+const decodeAsync = promisify(jwt.decode);
+const verifyAsync = promisify(jwt.verify);
 
 describe('AuthService', () => {
   const refreshTokens: IrefershTokenRedis[] = [];
@@ -20,7 +24,6 @@ describe('AuthService', () => {
 
   let authService: AuthService;
   let redisClient: IRedisClientPromisifed;
-  let authMiddleware: AuthMiddleware;
 
   setUpConfig();
 
@@ -35,7 +38,6 @@ describe('AuthService', () => {
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
-    authMiddleware = new AuthMiddleware();
 
     // hack to get easy access to private dependency for testing. Don't do it at home.
     // tslint:disable-next-line
@@ -79,17 +81,13 @@ describe('AuthService', () => {
         id: dataToHash.id,
         roles: JSON.stringify(dataToHash.roles),
       });
-      let decodedData: IparsedData;
-      try {
-        decodedData = await authMiddleware.verify(accessToken) as IparsedData;
-      } catch (error) {
-        expect(error).not.toBeDefined();
-      }
+      const decodedData: any = await verifyAsync(accessToken, process.env.JWT_SECRET);
 
       expect(accessToken).toBeDefined();
       expect(decodedData).toBeDefined();
       expect(typeof accessToken).toBe('string');
-      expect(decodedData).toEqual(dataToHash);
+      expect(decodedData.id).toBe(dataToHash.id);
+      expect(JSON.parse(decodedData.roles)).toEqual(dataToHash.roles);
     });
 
     it('should create tokens with non-default options if provided', async () => {
@@ -100,42 +98,28 @@ describe('AuthService', () => {
       const accessToken: string = await authService.createAccessToken({
         id: dataToHash.id,
         roles: JSON.stringify(dataToHash.roles),
-      }, { expiresIn: '2s' });
+      }, { expiresIn: '0s' });
 
-      jest.useFakeTimers();
-
-      try {
-        setTimeout(async () => await authMiddleware.verify(accessToken), 2002);
-      } catch (error) {
-        expect(accessToken).toBeDefined();
-        expect(error).toBeInstanceOf(UnauthorizedException);
-      }
-
-      jest.runAllTimers();
+      await expect(verifyAsync(accessToken, process.env.JWT_SECRET))
+        .rejects
+        .toBeDefined();
+      expect(accessToken).toBeDefined();
     });
   });
 
   describe('refreshAccessToken', () => {
     it('should throw HttpException if there is no user with given id', async () => {
-      try {
-        await authService.refreshAccessToken({
-          id: 9,
-          refreshToken: refreshTokens[0].token,
-        });
-      } catch (error) {
-        expect(error).toBeInstanceOf(HttpException);
-      }
+      await expect(authService.refreshAccessToken({
+        id: 9,
+        refreshToken: refreshTokens[0].token,
+      })).rejects.toBeInstanceOf(HttpException);
     });
 
     it('should throw HttpException if there is no such refresh token in DB', async () => {
-      try {
-        await authService.refreshAccessToken({
-          id,
-          refreshToken: crypto.randomBytes(20).toString('hex'),
-        });
-      } catch (error) {
-        expect(error).toBeInstanceOf(HttpException);
-      }
+      await expect(authService.refreshAccessToken({
+        id,
+        refreshToken: crypto.randomBytes(20).toString('hex'),
+      })).rejects.toBeInstanceOf(HttpException);
     });
 
     it('should create new access token if refresh token is valid', async () => {
@@ -151,19 +135,15 @@ describe('AuthService', () => {
 
   describe('getAllRefreshTokens', () => {
     it('should throw HttpException if there is no user with given id', async () => {
-      try {
-        await authService.getAllRefreshTokens(5);
-      } catch (error) {
-        expect(error).toBeInstanceOf(HttpException);
-      }
+      await expect(authService.getAllRefreshTokens(5))
+        .rejects
+        .toBeInstanceOf(HttpException);
     });
 
     it('should throw HttpException if existent user with given id doesn\'t have any refresh tokens', async () => {
-      try {
-        await authService.getAllRefreshTokens(id2);
-      } catch (error) {
-        expect(error).toBeInstanceOf(HttpException);
-      }
+      await expect(authService.getAllRefreshTokens(id2))
+        .rejects
+        .toBeInstanceOf(HttpException);
     });
 
     it('should return all refresh tokens for given id', async () => {
@@ -204,14 +184,10 @@ describe('AuthService', () => {
 
   describe('revokeRefreshToken', () => {
     it('should throw HttpException if there is no user with given id', async () => {
-      try {
-        await authService.revokeRefreshToken({
-          id: 9,
-          refreshToken: refreshTokens[0].token,
-        });
-      } catch (error) {
-        expect(error).toBeInstanceOf(HttpException);
-      }
+      await expect(authService.revokeRefreshToken({
+        id: 9,
+        refreshToken: refreshTokens[0].token,
+      })).rejects.toBeInstanceOf(HttpException);
     });
 
     it('should delete refresh token if id & token is found', async () => {
@@ -233,11 +209,9 @@ describe('AuthService', () => {
 
   describe('revokeAllRefreshTokens', () => {
     it('should throw HttpException if there is no user with given id', async () => {
-      try {
-        await authService.revokeAllRefreshTokens(9);
-      } catch (error) {
-        expect(error).toBeInstanceOf(HttpException);
-      }
+      await expect(authService.revokeAllRefreshTokens(9))
+        .rejects
+        .toBeInstanceOf(HttpException);
     });
 
     it('should delete all refresh tokens for given id', async () => {

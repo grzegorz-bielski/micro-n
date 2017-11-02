@@ -2,7 +2,10 @@ import * as request from 'supertest';
 import * as express from 'express';
 import * as faker from 'faker';
 import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { Repository } from 'typeorm';
+
+import { IRedisClientPromisifed } from '../src/modules/database/interfaces/database.interface';
 import { User } from '../src/modules/users/interfaces/user.interface';
 import { setUpConfig } from '../src/config/configure';
 import { configureApp } from '../src/server';
@@ -20,38 +23,45 @@ describe('Users', () => {
   const prefix = 'api';
   const server = express();
   const mockUsersNumber: number = 5;
-  const users: User[] = [];
-  let dbUsers: UserEntity[] = [];
+  let app: INestApplication;
+  let users: User[];
+  let dbUsers: UserEntity[];
   let userRepository: Repository<UserEntity>;
   let usersService: UsersService;
   let verificationService: VerificationService;
+  let redisClient: IRedisClientPromisifed;
 
-  for (let i = 0; i < mockUsersNumber; i++) {
-    let userData: User = {
-      name: faker.name.firstName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-    };
+  const flushDb = () => {
+    return Promise.all([
+      userRepository
+        .createQueryBuilder('user')
+        .delete()
+        .from(UserEntity)
+        .execute(),
+      redisClient.flushallAsync(),
+    ]);
+  };
 
-    // generate one active user
-    if (i === 0) {
-      userData = Object.assign(userData, { isActive: true });
+  const populateDb = async () => {
+    const newUsers: User[] = [];
+    for (let i = 0; i < mockUsersNumber; i++) {
+      let userData: User = {
+        name: faker.name.firstName(),
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+      };
+      // generate one active user
+      if (i === 0) {
+        userData = Object.assign(userData, { isActive: true });
+      }
+      newUsers.push(userData);
     }
 
-    users.push(userData);
-  }
-
-  const flushDb = () => (
-    userRepository
-      .createQueryBuilder('user')
-      .delete()
-      .from(UserEntity)
-      .execute()
-  );
-
-  const populateDb = () => (
-    userRepository.save(users.map(user => Object.assign(new UserEntity(), user)))
-  );
+    return {
+      dbUsers: await userRepository.save(newUsers.map(user => Object.assign(new UserEntity(), user))),
+      users: newUsers,
+    };
+  };
 
   beforeAll(async () => {
     setUpConfig();
@@ -62,7 +72,10 @@ describe('Users', () => {
       ],
     }).compile();
 
-    await configureApp(module.createNestApplication(server)).init();
+    app = await configureApp(
+      module.createNestApplication(server),
+    );
+    app.init();
 
     const usersModule = module.select<UsersModule>(UsersModule);
     usersService = usersModule.get<UsersService>(UsersService);
@@ -70,9 +83,16 @@ describe('Users', () => {
     // hack to get easy access to private dependency for testing. Don't do it at home.
     // tslint:disable-next-line
     userRepository = usersService['userRepository'];
+    // tslint:disable-next-line
+    redisClient = verificationService['redisClient'];
 
+  });
+
+  beforeAll(async () => {
     await flushDb();
-    dbUsers = await populateDb();
+    const response = await populateDb();
+    users = response.users;
+    dbUsers = response.dbUsers;
   });
 
   afterAll(async () => {
@@ -183,11 +203,11 @@ describe('Users', () => {
         .send({ email: user.email, password: user.password })
         .expect(200);
 
-      expect(typeof body.accessToken).toBe('string');
-      expect(typeof body.refreshToken).toBe('string');
-      expect(body.user).toBeDefined();
-      expect(body.user.name).toBe(user.name);
-      expect(body.user).toEqual(body.user);
+      expect(typeof body.meta.accessToken).toBe('string');
+      expect(typeof body.meta.refreshToken).toBe('string');
+      expect(body.data.user).toBeDefined();
+      expect(body.data.user.name).toBe(user.name);
+      expect(body.data.user.password).toBeUndefined();
     });
 
     it('should reject invalid credentials', async () => {
@@ -224,8 +244,8 @@ describe('Users', () => {
 
       await request(server)
         .delete(`/${prefix}/users/logout`)
-        .set('x-refresh', body.refreshToken)
-        .set('x-auth', body.accessToken)
+        .set('x-refresh', body.meta.refreshToken)
+        .set('x-auth', body.meta.accessToken)
         .expect(200);
     });
   });
@@ -246,8 +266,8 @@ describe('Users', () => {
 
       await request(server)
         .delete(`/${prefix}/users/logoutall`)
-        .set('x-refresh', body.refreshToken)
-        .set('x-auth', body.accessToken)
+        .set('x-refresh', body.meta.refreshToken)
+        .set('x-auth', body.meta.accessToken)
         .expect(200);
 
     });

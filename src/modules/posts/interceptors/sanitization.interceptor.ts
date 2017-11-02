@@ -4,13 +4,13 @@ import 'rxjs/add/operator/map';
 
 @Interceptor()
 export class SanitizationInterceptor implements NestInterceptor {
-  public intercept(dataOrRequest, context: ExecutionContext, stream$: Observable<any>): Observable<any> {
+  public intercept(request, context: ExecutionContext, stream$: Observable<any>): Observable<any> {
     return stream$.map(
       (response) => {
-        if (Array.isArray(response)) {
-          response = response.map(this.sanitizePost);
+        if (Array.isArray(response.data)) {
+          response.data = response.data.map(this.sanitizePost);
         } else if (typeof response === 'object'){
-          response = this.sanitizePost(response);
+          response.data = this.sanitizePost(response.data);
         }
 
         return response;

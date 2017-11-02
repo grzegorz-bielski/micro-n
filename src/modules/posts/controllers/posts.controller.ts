@@ -29,37 +29,41 @@ export class PostsController {
   ) {}
 
   @Get()
-  public getPosts(): Promise<PostEntity[]> {
-    return this.postsService.getPosts();
+  public async getPosts() {
+    return {
+      data: await this.postsService.getPosts(),
+    };
   }
 
   @Get('/:id')
-  public getPost( @Param() params: { id: string } ): Promise<PostEntity> {
-    return this.postsService.getPost(Number.parseInt(params.id));
+  public async getPost(@Param() params: { id: string }) {
+    return {
+      data: await this.postsService.getPost(Number.parseInt(params.id)),
+    };
   }
 
   @Post('/new')
   @Roles('user')
-  public newPost(
-    @Body() body: PostDto, @Request() req,
-  ): Promise<PostEntity> {
-     return this.postsService.newPost(req.user.id, body.content);
+  public async newPost(@Body() body: PostDto, @Request() req) {
+     return {
+       data: await this.postsService.newPost(req.user.id, body.content),
+     };
   }
 
   @Patch('/:id')
   @Roles('user')
-  public updatePost(
-    @Param() params: { id: string }, @Body() body, @Request() req,
-  ): Promise<PostEntity> {
-    return this.postsService.updatePost(req.user.id, Number.parseInt(params.id), body.content);
+  public async updatePost(@Param() params: { id: string }, @Body() body, @Request() req) {
+    return {
+      data: await this.postsService.updatePost(req.user.id, Number.parseInt(params.id), body.content),
+    };
   }
 
   @Delete('/:id')
   @Roles('user')
-  public deletePost(
-    @Param() params: { id: string }, @Request() req,
-  ): Promise<void> {
-    return this.postsService.deletePost(req.user.id, Number.parseInt(params.id));
+  public async deletePost(@Param() params: { id: string }, @Request() req) {
+    return {
+      data: await this.postsService.deletePost(req.user.id, Number.parseInt(params.id)),
+    };
   }
 
 }

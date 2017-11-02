@@ -17,10 +17,18 @@ export class AuthController {
   ) {}
 
   // refresh token
-  @Post('/token')
-  public async getToken( @Body() body: AuthDto ): Promise<{ accessToken: string }> {
+  @Get('/token/:id')
+  public async getToken( @Param() params: { id: string }, @Request() req ) {
+    const accessToken = await this.authService.refreshAccessToken({
+      refreshToken: req.header('x-refresh'),
+      id: Number.parseInt(params.id),
+    });
+
     return {
-      accessToken: await this.authService.refreshAccessToken(body),
+      data: 'Ok',
+      meta: {
+        accessToken,
+      },
     };
   }
 
@@ -34,8 +42,10 @@ export class AuthController {
   // get all tokens
   @Roles('admin')
   @Get('/token/all/:id')
-  public async getAllTokens( @Param() params: { id: string }): Promise<IrefershTokenRedis[]> {
-    return this.authService.getAllRefreshTokens(Number.parseInt(params.id));
+  public async getAllTokens( @Param() params: { id: string }) {
+    return {
+      data: await this.authService.getAllRefreshTokens(Number.parseInt(params.id)),
+    };
   }
 
   @All('*')

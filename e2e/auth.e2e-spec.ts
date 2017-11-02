@@ -84,7 +84,7 @@ describe('Auth', () => {
     await flushDb();
   });
 
-  describe('POST /token', () => {
+  describe('GET /token', () => {
     it('should return new access token', async () => {
       const user = users[0];
       const { body: loginBody } = await request(server)
@@ -93,11 +93,13 @@ describe('Auth', () => {
         .expect(200);
 
       const { body: tokenBody } = await request(server)
-        .post(`/${prefix}/auth/token`)
-        .send({ id: loginBody.user.id, refreshToken: loginBody.refreshToken });
+        .get(`/${prefix}/auth/token/${loginBody.data.user.id}`)
+        .set('x-refresh', loginBody.meta.refreshToken)
+        .expect(200);
 
-      expect(tokenBody.accessToken).toBeDefined();
-      expect(typeof tokenBody.accessToken).toBe('string');
+      expect(tokenBody.meta.accessToken).toBeDefined();
+      expect(tokenBody.data).toBe('Ok');
+      expect(typeof tokenBody.meta.accessToken).toBe('string');
     });
   });
 });

@@ -175,10 +175,12 @@ describe('UsersController', () => {
       expect(createRefreshTokenMock).toBeCalledWith(tokenData);
 
       expect(response).toBeDefined();
-      expect(response).toEqual({
+      expect(response.data).toEqual({
+        user: dbUserMock,
+      });
+      expect(response.meta).toEqual({
         accessToken: accessTokenMock,
         refreshToken: refreshTokenMock,
-        user: dbUserMock,
       });
     });
   });

@@ -136,6 +136,14 @@ export class AuthService implements IAuthService {
     }
   }
 
+  public sign(data: object, options: jwt.SignOptions) {
+    return new Promise((resolve, reject) => {
+      jwt.sign(data, process.env.JWT_SECRET, options, (error, token) => {
+        (error || !token) ? reject(error) : resolve(token);
+      });
+    });
+  }
+
   private async getRefreshTokens(id: number): Promise<IrefershTokenRedis[]> {
     const userId: string = `user-${id}`;
     let reply: number;
@@ -166,7 +174,7 @@ export class AuthService implements IAuthService {
       .find(tokenObj => tokenObj.token === data.refreshToken);
 
     if (!refreshTokenObj) {
-      throw new HttpException('There is no such refresh token.', HttpStatus.NOT_FOUND);
+      throw new HttpException('Invalid refresh token', HttpStatus.NOT_FOUND);
     }
 
     return refreshTokenObj;
@@ -185,17 +193,5 @@ export class AuthService implements IAuthService {
     if (reply === 0) {
       throw new HttpException('There is no user with such ID', HttpStatus.NOT_FOUND);
     }
-  }
-
-  private sign(data: object, options: jwt.SignOptions) {
-    return new Promise((resolve, reject) => {
-      jwt.sign(data, process.env.JWT_SECRET, options, (error, token) => {
-        if (error || !token) {
-          reject(error);
-        } else {
-          resolve(token);
-        }
-      });
-    });
   }
 }

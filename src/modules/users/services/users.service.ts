@@ -28,7 +28,7 @@ export class UsersService {
   public async logIn(credentials: Credentials): Promise<UserEntity> {
     const user: UserEntity = await this.userRepository.findOne({ email: credentials.email});
     if (!user) {
-      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('No such user', HttpStatus.UNAUTHORIZED);
     }
     if (!user.isActive) {
       throw new HttpException('Inactive account', HttpStatus.UNAUTHORIZED);

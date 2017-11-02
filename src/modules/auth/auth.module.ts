@@ -21,8 +21,11 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewaresConsumer): void {
 
+    const excludedPaths = ['/auth/token'];
+
     consumer
         .apply(AuthMiddleware)
+        .with(excludedPaths)
         .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
