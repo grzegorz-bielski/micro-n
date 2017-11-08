@@ -1,20 +1,23 @@
 import * as request from 'supertest';
 import * as faker from 'faker';
 import * as express from 'express';
+import * as path from 'path';
 import { Test } from '@nestjs/testing';
 import { Repository } from 'typeorm';
 
+import { getImage, deleteImage } from '../src/modules/common/util/files';
 import { setUpConfig } from '../src/config/configure';
 import { configureApp } from '../src/server';
 import { User } from '../src/modules/users/interfaces/user.interface';
 import { UserEntity } from '../src/modules/users/entities/user.entity';
 import { PostEntity } from '../src/modules/posts/entities/post.entity';
+import { PostImageEntity } from '../src/modules/posts/entities/post-image.entity';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { UsersModule } from '../src/modules/users/users.module';
 import { PostsModule } from '../src/modules/posts/posts.module';
 import { PostsService } from '../src/modules/posts/services/posts.service';
 
-// bigger timeout to populate db
+// bigger timeout to populate / flush db
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('PostsModule', () => {
@@ -26,8 +29,15 @@ describe('PostsModule', () => {
   let postsService: PostsService;
   let userRepository: Repository<UserEntity>;
   let postRepository: Repository<PostEntity>;
+  // let postImagageRepository: Repository<PostImageEntity>;
 
   const flushDb = async (): Promise<void> => {
+    await postRepository
+      .createQueryBuilder('post_image')
+      .delete()
+      .from(PostImageEntity)
+      .execute();
+
     await postRepository
       .createQueryBuilder('post')
       .delete()
@@ -101,6 +111,8 @@ describe('PostsModule', () => {
     // tslint:disable-next-line
     postRepository = postsService['postRepository'];
 
+    // PostImageEntity = postsService['post']
+
   });
 
   beforeEach(async () => {
@@ -116,7 +128,7 @@ describe('PostsModule', () => {
   });
 
   describe('GET /posts', () => {
-    it('should return ann array of posts', async () => {
+    it('should return an array of posts', async () => {
       const { body } = await request(server)
         .get(`/${prefix}/posts`)
         .expect(200);
@@ -171,7 +183,14 @@ describe('PostsModule', () => {
     });
 
     it('should create a new post for authorized user', async () => {
-      const post = { content: 'ewefwf' };
+      const post = {
+        content: 'ewefwf',
+        image: {
+          fileName: 'fuu',
+          isNsfw: false,
+          image: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+        },
+      };
       const { body: logInBody } = await request(server)
         .post(`/${prefix}/users/login`)
         .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
@@ -184,9 +203,88 @@ describe('PostsModule', () => {
         .set('x-refresh', logInBody.meta.refreshToken)
         .expect(201);
 
+      const image: Buffer = await getImage(newPostBody.data.image.fileName);
+      expect(image).toBeDefined();
+      expect(image).toBeInstanceOf(Buffer);
       expect(newPostBody.data.content).toBe(post.content);
+      expect(typeof newPostBody.data.image.fileName).toBe('string');
+      expect(newPostBody.data.image.isNsfw).toBe(post.image.isNsfw);
+
+      await deleteImage(newPostBody.data.image.fileName);
+    });
+  });
+
+  describe('/PATCH /posts/:id', () => {
+    it('shouldn\'t update someone\'s else post', async () => {
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      const { body: patchPostBody } = await request(server)
+        .patch(`/${prefix}/posts/${dbPosts[7].id}`)
+        .send({ content: 'kek' })
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(403);
+
+      expect(patchPostBody.type).toBe('HttpException');
     });
 
+    it('should update post of proper user', async () => {
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      const content = 'kek';
+
+      const { body: patchPostBody } = await request(server)
+        .patch(`/${prefix}/posts/${dbPosts[0].id}`)
+        .send({ content })
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(200);
+
+      const dbPost = await postRepository.findOneById(dbPosts[0].id);
+
+      expect(patchPostBody.data.content).toBe(content);
+      expect(dbPost.content).toBe(content);
+    });
+  });
+
+  describe('DELETE /posts/:id', () => {
+    it('shouldn\'t delete someone\'s else post', async () => {
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      const { body: deletePostBody } = await request(server)
+        .delete(`/${prefix}/posts/${dbPosts[7].id}`)
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(403);
+
+      expect(deletePostBody.type).toBe('HttpException');
+    });
+
+    it('should delete post of proper user', async () => {
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      const { body: patchPostBody } = await request(server)
+        .delete(`/${prefix}/posts/${dbPosts[0].id}`)
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(200);
+
+      const dbPost = await postRepository.findOneById(dbPosts[0].id);
+
+      expect(dbPost).toBeUndefined();
+    });
   });
 
 });

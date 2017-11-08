@@ -7,22 +7,26 @@ export class SanitizationInterceptor implements NestInterceptor {
   public intercept(request, context: ExecutionContext, stream$: Observable<any>): Observable<any> {
     return stream$.map(
       (response) => {
-        if (Array.isArray(response.data)) {
-          response.data = response.data.map(this.sanitizePost);
+        if (response && Array.isArray(response.data)) {
+          response.data = response.data.map(this.sanitize);
         } else if (typeof response === 'object'){
-          response.data = this.sanitizePost(response.data);
+          response.data = this.sanitize(response.data);
         }
 
         return response;
       },
     );
   }
-  private sanitizePost(post) {
-    const sanitizedUser = Object.assign({}, post.user);
+  private sanitize(post) {
+    // user
+    const { id, name, roles, isActive } = Object.assign({}, post.user);
 
-    // remove password
-    delete sanitizedUser.password;
+    // post
+    const sanitizedPost = Object.assign(post, { user: { id, name, roles, isActive } });
+    if (sanitizedPost.image) {
+      delete sanitizedPost.image.image;
+    }
 
-    return Object.assign(post, { user: sanitizedUser });
+    return sanitizedPost;
   }
 }

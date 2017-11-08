@@ -11,7 +11,7 @@ export interface ValidationField {
 }
 
 // ideally it would be a `class-validator` decorator or 'nestjs' Guard, ...but:
-// 1. `class-validator` custom decorator can't have injectet nest dependencies in clean way
+// 1. `class-validator` custom decorator can't have injected nest dependencies in clean way
 // 2. Guards can't have `user` object as param in clean way and I want it for consistent validation errors
 
 @Component()

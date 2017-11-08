@@ -13,7 +13,7 @@ import {
 
 import { PostsService } from '../services/posts.service';
 import { SanitizationInterceptor } from '../interceptors/sanitization.interceptor';
-import { PostDto } from '../dto/Post.dto';
+import { PostDto } from '../dto/post.dto';
 import { PostEntity } from '../entities/post.entity';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ForbiddenException } from '../../common/exceptions/forbidden.exception';
@@ -46,7 +46,11 @@ export class PostsController {
   @Roles('user')
   public async newPost(@Body() body: PostDto, @Request() req) {
      return {
-       data: await this.postsService.newPost(req.user.id, body.content),
+       data: await this.postsService.newPost({
+         userId: req.user.id,
+         content: body.content,
+         image: body.image,
+       }),
      };
   }
 
@@ -54,16 +58,22 @@ export class PostsController {
   @Roles('user')
   public async updatePost(@Param() params: { id: string }, @Body() body, @Request() req) {
     return {
-      data: await this.postsService.updatePost(req.user.id, Number.parseInt(params.id), body.content),
+      data: await this.postsService.updatePost({
+        userId: req.user.id,
+        postId: Number.parseInt(params.id),
+        content: body.content,
+        image: body.image,
+      }),
     };
   }
 
   @Delete('/:id')
   @Roles('user')
   public async deletePost(@Param() params: { id: string }, @Request() req) {
-    return {
-      data: await this.postsService.deletePost(req.user.id, Number.parseInt(params.id)),
-    };
+    await this.postsService.deletePost({
+      userId: req.user.id,
+      postId: Number.parseInt(params.id),
+    });
   }
 
 }

@@ -2,16 +2,15 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  BeforeInsert,
   AfterInsert,
   ManyToOne,
+  OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { HttpException } from '@nestjs/core';
-import { HttpStatus } from '@nestjs/common';
 
 import { UserEntity } from '../../users/entities/user.entity';
+import { PostImageEntity } from './post-image.entity';
 
 @Entity()
 export class PostEntity {
@@ -23,6 +22,12 @@ export class PostEntity {
 
   @Column({ type: 'text' })
   public content: string;
+
+  @OneToOne(type => PostImageEntity, postImageEntity => postImageEntity.post, {
+    cascadeInsert: true,
+    cascadeUpdate: true,
+  })
+  public image: PostImageEntity;
 
   // metadata
 
@@ -37,6 +42,7 @@ export class PostEntity {
 
   // event listeners
 
+  @AfterInsert()
   public addDefault() {
     if (!this.score) {
       this.score = 0;

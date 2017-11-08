@@ -15,6 +15,7 @@ import * as bcrypt from 'bcryptjs';
 import { PostEntity } from '../../posts/entities/post.entity';
 
 const defaultRole = JSON.stringify(['user']);
+const defaultDescription = 'Write something about yourself.';
 
 @Entity()
 export class UserEntity {
@@ -41,10 +42,7 @@ export class UserEntity {
   @UpdateDateColumn()
   public updatedAt: string;
 
-  @Column({
-    length: 500,
-    default: 'Write something about yourself.',
-  })
+  @Column({ length: 500, default: defaultDescription })
   public description: string;
 
   @Column({ default: defaultRole })
@@ -68,10 +66,15 @@ export class UserEntity {
   }
 
   // return default values to the service
+  // TODO: make it more sane
   @AfterInsert()
   public addDefault() {
     if (!this.roles) {
       this.roles = defaultRole;
+    }
+
+    if (!this.description) {
+      this.description = defaultDescription;
     }
 
     if (!this.isActive) {

@@ -4,3 +4,4 @@
   export const MailTransportToken = Symbol('MailTransportToken');
   export const UserRepositoryToken = Symbol('UserRepositoryToken');
   export const PostRepositoryToken = Symbol('PostRepositoryToken');
+  export const PostImageRepositoryToken = Symbol('PostImageRepositoryToken');

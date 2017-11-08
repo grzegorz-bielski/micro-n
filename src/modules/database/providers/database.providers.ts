@@ -1,12 +1,16 @@
 import { URL } from 'url';
 import * as redis from 'redis';
 import { createConnection, Connection } from 'typeorm';
+
 import { promisifyAll } from '../../common/util/promisifyAll';
 import { IdatabaseProviders } from './../interfaces/providers.interface';
 import { IRedisClientPromisifed } from './../interfaces/database.interface';
 import { MySQLConnectionToken, RedisClientToken } from '../../constants';
+
+// entities
 import { UserEntity } from '../../users/entities/user.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
+import { PostImageEntity } from '../../posts/entities/post-image.entity';
 
 let mysqlConnectionCounter = 0;
 
@@ -26,6 +30,7 @@ export const databaseProviders: IdatabaseProviders[] = [
         entities: [
           UserEntity,
           PostEntity,
+          PostImageEntity,
         ],
         synchronize: true,
       });
