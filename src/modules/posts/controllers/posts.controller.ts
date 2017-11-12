@@ -44,7 +44,7 @@ export class PostsController {
     };
   }
 
-  @Post('/new')
+  @Post()
   @Roles('user')
   public async newPost(@Body() body: PostDto, @Request() req) {
      return {

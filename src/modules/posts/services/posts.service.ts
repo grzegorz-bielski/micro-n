@@ -59,7 +59,6 @@ export class PostsService {
     const post: PostEntity = await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
-      .leftJoinAndSelect('post.comments', 'comments')
       .leftJoinAndSelect('post.image', 'image')
       .where('post.id = :id', { id })
       .getOne();
@@ -74,12 +73,63 @@ export class PostsService {
   public async newPost(data: InewPost): Promise<PostEntity> {
     const user: UserEntity = await this.userRepository.findOneById(data.userId);
     const postImage: Image = data.image;
-    const postData: any = { content: data.content, user };
+    let postData: object = { content: data.content, user };
 
     if (!user) {
       throw new HttpException('There is no such user', HttpStatus.NOT_FOUND);
     }
 
+    postData = await this.persistImage(postImage, postData);
+
+    return this.postRepository.save(Object.assign(new PostEntity(), postData));
+  }
+
+  public async updatePost(data: IupdatePost): Promise<PostEntity> {
+    const oldPost = data.post;
+    const postImage: Image = data.image;
+    let postData: object = { content: data.content };
+    let isDirectLink = false;
+
+    if (postImage && oldPost.image) {
+      // if there is new image and one before
+      if (oldPost.image.fileName && postImage.fileName !== oldPost.image.fileName) {
+        await deleteImage(oldPost.image.fileName);
+      } else if (oldPost.image.directLink && postImage.directLink !== oldPost.image.directLink) {
+        isDirectLink = true;
+      }
+    }
+    postData = await this.persistImage(postImage, postData);
+
+    return this.postRepository.save(
+      Object.assign(oldPost, postData, { directLink: isDirectLink ? postImage.directLink : ''}),
+    );
+  }
+
+  public async deletePost(post: PostEntity): Promise<void> {
+
+  // delete image
+  if (post.image && post.image.directLink) {
+    // delete from DB
+    this.postImageRepository.remove(post.image);
+  } else if (post.image && post.image.fileName) {
+    // delete from DB and disk
+
+    await Promise.all([
+      deleteImage(post.image.fileName),
+      this.postImageRepository.remove(post.image),
+    ]);
+
+  }
+
+  // delete all comments with images
+  await this.commentsService.deleteAllComments(post.id);
+
+  // delete post
+
+  await this.postRepository.remove(post);
+  }
+
+  private async persistImage(postImage: Image, postData: any): Promise<object> {
     if (postImage && postImage.directLink) {
       // save only link
       delete postImage.fileName;
@@ -92,55 +142,7 @@ export class PostsService {
         fileName: await saveImage(postImage.image, postImage.fileName),
       });
     }
-
-    return this.postRepository.save(Object.assign(new PostEntity(), postData));
-  }
-
-  public async updatePost(data: IupdatePost): Promise<PostEntity> {
-    const oldPost = data.post;
-    const postImage: Image = data.image;
-    const postData: any = { content: data.content };
-
-    // update image
-    if (postImage && postImage.fileName !== oldPost.image.fileName) {
-      // delete old image and save new one to public folder
-      const [_, fileName] = await Promise.all([
-        deleteImage(oldPost.image.fileName),
-        saveImage(postImage.image, postImage.fileName),
-      ]);
-      postData.image = Object.assign(
-        new PostImageEntity(), postImage, { fileName },
-      );
-    }
-
-    return this.postRepository.save(Object.assign(oldPost, postData));
-  }
-
-  public async deletePost(post: PostEntity): Promise<void> {
-    try {
-      // delete image
-      if (post.image && post.image.directLink) {
-        // delete from DB
-        this.postImageRepository.remove(post.image);
-      } else if (post.image && post.image.fileName) {
-        // delete from DB and disk
-        await Promise.all([
-          deleteImage(post.image.fileName),
-          this.postImageRepository.remove(post.image),
-        ]);
-      }
-      console.log('COMMENTOS', post.comments);
-      // delete all comments with images
-      if (post.comments) {
-        // await this.commentsService.deleteAllComments(post)
-        // await Promise.all(post.comments.map(comment => this.commentsService.deleteComment(comment)));
-      }
-
-      // delete post
-      await this.postRepository.remove(post);
-    } catch (error) {
-      console.log(error);
-    }
+    return postData;
   }
 
 }

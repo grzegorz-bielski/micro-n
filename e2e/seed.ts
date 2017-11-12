@@ -18,21 +18,19 @@ interface DbContent {
 }
 
 export const dummyImage = {
-  fileName: 'foo',
+  // fileName: 'foo',
+  directLink: 'http://www.kek.com/pictures/pic.jpg',
   isNsfw: false,
-  image: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+  // image: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
 };
 
 const generateAndCreatePosts = (postUser: UserEntity, numberOf: number = 5): PostEntity[] => {
   const posts: PostEntity[] = [];
-
   for (let i = 0; i <= numberOf; i++) {
     posts.push(Object.assign(new PostEntity(), {
       content: faker.lorem.sentence(),
       user: postUser,
-      image: i === 1 ? Object.assign(
-        new PostImageEntity(), dummyImage, { fileName: `${crypto.randomBytes(15).toString('hex')}-${dummyImage.fileName}.jpg` },
-      ) : void 0,
+      image: i === 0 ? Object.assign(new PostImageEntity(), dummyImage) : void 0,
     }));
   }
   return posts;
@@ -40,7 +38,6 @@ const generateAndCreatePosts = (postUser: UserEntity, numberOf: number = 5): Pos
 
 const generateAndCreateComments = (post: PostEntity, commentUser: UserEntity, numberOf: number = 2): CommentEntity[] => {
   const comments: CommentEntity[] = [];
-
   for (let i = 0; i <= numberOf; i++) {
     comments.push(Object.assign(new CommentEntity(), {
       post,
@@ -49,9 +46,9 @@ const generateAndCreateComments = (post: PostEntity, commentUser: UserEntity, nu
       image: i === 0 ? Object.assign( new CommentImageEntity(), dummyImage) : void 0,
     }));
   }
-
   return comments;
 };
+
 const generateUsers = (numberOf: number = 5): User[] => {
   const newUsers: User[] = [];
   for (let i = 0; i < numberOf; i++) {
@@ -59,7 +56,7 @@ const generateUsers = (numberOf: number = 5): User[] => {
       name: faker.name.firstName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
-      isActive: i === 0 ? true : false,
+      isActive: i === 0 || i === 1 ? true : false,
     });
   }
   return newUsers;

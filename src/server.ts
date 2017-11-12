@@ -13,9 +13,7 @@ import { TokenInterceptor } from './modules/auth/interceptors/token.interceptor'
 import { TimestampInterceptor } from './modules/common/interceptors/timestamp.interceptor';
 import { HttpExceptionFilter } from './modules/common/filters/httpException.filter';
 
-setUpConfig();
-
-export const configureApp = (app: INestApplication) => {
+export const configureApp = (app: INestApplication): INestApplication => {
   // express config
   app.use(helmet());
   app.use(bodyParser.json({ limit: '5mb' }));
@@ -32,9 +30,13 @@ export const configureApp = (app: INestApplication) => {
   return app;
 };
 
-export const startServer: Promise<void> = (async () => {
-  const server: express.Express = express();
-  const app: INestApplication = configureApp(await NestFactory.create(ApplicationModule, server));
+// start server
+(async () => {
+  setUpConfig();
 
+  const server: express.Express = express();
+  const app: INestApplication = configureApp(
+    await NestFactory.create(ApplicationModule, server),
+  );
   await app.listen(Number.parseInt(process.env.PORT));
 })();

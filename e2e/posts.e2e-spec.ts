@@ -40,64 +40,6 @@ describe('PostsModule', () => {
   let dbPosts: PostEntity[];
   let dbComments: CommentEntity[];
 
-  // const flushDb = async (): Promise<void> => {
-  //   await postRepository
-  //     .createQueryBuilder('post_image')
-  //     .delete()
-  //     .from(PostImageEntity)
-  //     .execute();
-
-  //   await postRepository
-  //     .createQueryBuilder('post')
-  //     .delete()
-  //     .from(PostEntity)
-  //     .execute();
-
-  //   await userRepository
-  //     .createQueryBuilder('user')
-  //     .delete()
-  //     .from(UserEntity)
-  //     .execute();
-
-  // };
-  // const populateDb = async (): Promise<{
-  //   usersEntity: UserEntity[],
-  //   postsEntity: PostEntity[],
-  //   users: User[],
-  // }> => {
-  //   const generateAndCreatePosts = (postUser: UserEntity, numberOf: number = 5): PostEntity[] => {
-  //     const posts: PostEntity[] = [];
-  //     for (let i = 0; i <= numberOf; i++) {
-  //       posts.push(Object.assign(new PostEntity(), {
-  //         content: faker.lorem.sentence(),
-  //         user: postUser,
-  //       }));
-  //     }
-  //     return posts;
-  //   };
-  //   const generateUsers = (numberOf: number = 5): User[] => {
-  //     const newUsers: User[] = [];
-  //     for (let i = 0; i < numberOf; i++) {
-  //       newUsers.push({
-  //         name: faker.name.firstName(),
-  //         email: faker.internet.email(),
-  //         password: faker.internet.password(),
-  //         isActive: i === 0 ? true : false,
-  //       });
-  //     }
-  //     return newUsers;
-  //   };
-  //   const users: User[] = generateUsers();
-  //   const usersEntity: UserEntity[] = await userRepository.save(
-  //     users.map(user => Object.assign(new UserEntity(), user)),
-  //   );
-  //   const postsEntity: PostEntity[] = await postRepository.save(
-  //     usersEntity.map(user => generateAndCreatePosts(user)).reduce((a, b) => a.concat(b)),
-  //   );
-
-  //   return { usersEntity, postsEntity, users };
-  // };
-
   setUpConfig();
 
   beforeAll(async () => {
@@ -182,7 +124,7 @@ describe('PostsModule', () => {
   describe('POST /posts/new', () => {
     it('should throw HttpException for unauthorized request', async () => {
       const { body } = await request(server)
-        .post(`/${prefix}/posts/new`)
+        .post(`/${prefix}/posts`)
         .send({ content: 'ewefwf' })
         .expect(403);
 
@@ -191,7 +133,7 @@ describe('PostsModule', () => {
 
     it('should throw HttpException for invalid access token', async () => {
       const { body } = await request(server)
-        .post(`/${prefix}/posts/new`)
+        .post(`/${prefix}/posts`)
         .send({ content: 'ewefwf' })
         .set('x-auth', 'wfwfwefwefvvvvv434')
         .expect(401);
@@ -214,7 +156,7 @@ describe('PostsModule', () => {
         .expect(200);
 
       const { body: newPostBody } = await request(server)
-        .post(`/${prefix}/posts/new`)
+        .post(`/${prefix}/posts`)
         .send(post)
         .set('x-auth', logInBody.meta.accessToken)
         .set('x-refresh', logInBody.meta.refreshToken)
@@ -295,11 +237,46 @@ describe('PostsModule', () => {
       const { body: deletePostBody } = await request(server)
         .delete(`/${prefix}/posts/${dbPosts[0].id}`)
         .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken);
-        // .expect(200);
-      console.log(deletePostBody);
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(200);
+      // console.log(deletePostBody);
 
       const dbPost = await postRepository.findOneById(dbPosts[0].id);
+
+      expect(dbPost).toBeUndefined();
+    });
+
+    it('should delete new post with image upload', async () => {
+      const post = {
+        content: 'ewefwf',
+        image: {
+          fileName: 'fuu',
+          isNsfw: false,
+          image: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+        },
+      };
+      // login
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      // create post
+      const { body: newPostBody } = await request(server)
+        .post(`/${prefix}/posts`)
+        .send(post)
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(201);
+
+      // delete it
+      const { body: deletePostBody } = await request(server)
+        .delete(`/${prefix}/posts/${newPostBody.data.id}`)
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(200);
+
+      const dbPost = await postRepository.findOneById(newPostBody.data.id);
 
       expect(dbPost).toBeUndefined();
     });

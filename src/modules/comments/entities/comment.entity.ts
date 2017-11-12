@@ -18,7 +18,7 @@ export class CommentEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: false })
   public content: string;
 
   // relations

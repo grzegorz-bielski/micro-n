@@ -45,30 +45,26 @@ export class CommentsService {
     private readonly commentImageRepository: Repository<CommentImageEntity>,
   ) {}
 
-  public async getComments(postId: number) {
-    const comments: CommentEntity[] = await this.commentRepository
-      .createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.user', 'user')
-      .leftJoinAndSelect('post.image', 'image')
-      .where('comment.id = :id', { postId })
-      .getMany();
+  public async getComments(postId: number, ignoreError: boolean = false) {
+    const comments: CommentEntity[] = await this.commentRepository.find({
+      relations: ['user', 'image'],
+      where: { postId },
+    });
 
-    if (!comments || comments.length <= 0) {
+    if ((!comments || comments.length <= 0) && !ignoreError) {
       throw new HttpException('There is no comments for this post', HttpStatus.NOT_FOUND);
     }
 
     return comments;
   }
 
-  public async getComment(commentId: number) {
-    const comment: CommentEntity = await this.commentRepository
-      .createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.user', 'user')
-      .leftJoinAndSelect('post.image', 'image')
-      .where('comment.id = :id', { commentId })
-      .getOne();
+  public async getComment(commentId: number, ignoreError: boolean = false) {
+    const comment: CommentEntity = await this.commentRepository.findOne({
+      relations: ['user', 'image'],
+      where: { id: commentId },
+    });
 
-    if (!comment) {
+    if (!comment && !ignoreError) {
       throw new HttpException('There is no such post', HttpStatus.NOT_FOUND);
     }
 
@@ -81,7 +77,7 @@ export class CommentsService {
       this.postRepository.findOneById(data.postId),
     ]);
     const commentImage: Image = data.image;
-    const commentData: any = { content: data.content, user, post };
+    let commentData: object = { content: data.content, user, post };
 
     if (!user) {
       throw new HttpException('There is no such user', HttpStatus.NOT_FOUND);
@@ -90,18 +86,7 @@ export class CommentsService {
       throw new HttpException('There is no such post', HttpStatus.NOT_FOUND);
     }
 
-    if (commentImage && commentImage.directLink) {
-      // save only link
-      delete commentImage.fileName;
-      delete commentImage.image;
-      commentData.image = Object.assign(new CommentImageEntity(), commentImage);
-    } else if (commentImage && commentImage.image) {
-       // image upload
-      commentData.image = Object.assign(new CommentImageEntity(), commentImage, {
-        // save image to public folder
-        fileName: await saveImage(commentImage.image, commentImage.fileName),
-      });
-    }
+    commentData = await this.persistImage(commentImage, commentData);
 
     return this.commentRepository.save(Object.assign(new CommentEntity(), commentData));
   }
@@ -109,22 +94,23 @@ export class CommentsService {
   public async updateComment(data: IupdateComment) {
     const oldComment = data.comment;
     const commentImage: Image = data.image;
-    const commentData: any = { content: data.content };
+    let commentData: object = { content: data.content };
+    let isDirectLink: boolean = false;
 
-    // update image
-    if (commentImage && commentImage.fileName !== oldComment.image.fileName) {
-      // delete old image and save new one to public folder
-      const [_, fileName] = await Promise.all([
-        deleteImage(oldComment.image.fileName),
-        saveImage(commentImage.image, commentImage.fileName),
-      ]);
-
-      commentData.image = Object.assign(
-        new CommentImageEntity(), commentImage, { fileName },
-      );
+    if (commentImage && oldComment.image) {
+      // if there was image before
+      if (oldComment.image.fileName && commentImage.fileName !== oldComment.image.fileName) {
+        await deleteImage(oldComment.image.fileName);
+      } else if (oldComment.image.directLink && commentImage.directLink !== oldComment.image.directLink) {
+        isDirectLink = true;
+      }
     }
 
-    return this.commentRepository.save(Object.assign(oldComment, commentData));
+    commentData = await this.persistImage(commentImage, commentData);
+
+    return this.commentRepository.save(
+      Object.assign(oldComment, commentData, { directLink: isDirectLink ? commentImage.directLink : ''}),
+    );
   }
 
   public async deleteComment(comment: CommentEntity) {
@@ -144,7 +130,26 @@ export class CommentsService {
     await this.commentRepository.remove(comment);
   }
 
-  public async deleteAllComments() {
-    ///
+  public async deleteAllComments(id: number) {
+    const comments: CommentEntity[] = await this.getComments(id, true);
+    if (comments) {
+      return Promise.all(comments.map(comment => this.deleteComment(comment)));
+    }
+  }
+
+  private async persistImage(commentImage: Image, commentData: any): Promise<object> {
+    if (commentImage && commentImage.directLink) {
+      // save only link
+      delete commentImage.fileName;
+      delete commentImage.image;
+      commentData.image = Object.assign(new CommentImageEntity(), commentImage);
+    } else if (commentImage && commentImage.image) {
+       // image upload
+      commentData.image = Object.assign(new CommentImageEntity(), commentImage, {
+        // save image to public folder
+        fileName: await saveImage(commentImage.image, commentImage.fileName),
+      });
+    }
+    return commentData;
   }
 }

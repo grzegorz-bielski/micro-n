@@ -28,7 +28,7 @@ export class CommentsController {
     private readonly commentsService: CommentsService,
   ) {}
 
-  @Get('/:id')
+  @Get('/post/:id')
   public async getComments(@Param() params: { id: string }) {
     const postId: number = Number.parseInt(params.id);
 
@@ -46,7 +46,7 @@ export class CommentsController {
     };
   }
 
-  @Post('/new/:id')
+  @Post('/post/:id')
   @Roles('user')
   public async newComment(
     @Param() params: { id: string },
