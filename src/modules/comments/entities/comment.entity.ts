@@ -5,18 +5,16 @@ import {
   AfterInsert,
   ManyToOne,
   OneToOne,
-  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinColumn,
 } from 'typeorm';
 
 import { UserEntity } from '../../users/entities/user.entity';
-import { PostImageEntity } from './post-image.entity';
-import { CommentEntity } from '../../comments/entities/comment.entity';
+import { PostEntity } from '../../posts/entities/post.entity';
+import { CommentImageEntity } from './comment-image.entity';
 
 @Entity()
-export class PostEntity {
+export class CommentEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -25,17 +23,17 @@ export class PostEntity {
 
   // relations
 
+  @ManyToOne(type => PostEntity, postEntity => postEntity.comments)
+  public post: PostEntity;
+
   @ManyToOne(type => UserEntity, userEntity => userEntity.posts)
   public user: UserEntity;
 
-  @OneToOne(type => PostImageEntity, postImageEntity => postImageEntity.post, {
+  @OneToOne(type => CommentImageEntity, commentImageEntity => commentImageEntity.post, {
     cascadeInsert: true,
     cascadeUpdate: true,
   })
-  public image: PostImageEntity;
-
-  @OneToMany(type => CommentEntity, commentEntity => commentEntity.post)
-  public comments: CommentEntity[];
+  public image: CommentImageEntity;
 
   // metadata
 

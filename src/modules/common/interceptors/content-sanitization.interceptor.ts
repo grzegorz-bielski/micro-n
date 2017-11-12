@@ -2,6 +2,8 @@ import { Interceptor, NestInterceptor, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
+// for use with Posts and/or Comments
+
 @Interceptor()
 export class SanitizationInterceptor implements NestInterceptor {
   public intercept(request, context: ExecutionContext, stream$: Observable<any>): Observable<any> {
@@ -17,16 +19,16 @@ export class SanitizationInterceptor implements NestInterceptor {
       },
     );
   }
-  private sanitize(post) {
+  private sanitize(postOrComment) {
     // user
-    const { id, name, roles, isActive } = Object.assign({}, post.user);
+    const { id, name, roles, isActive } = Object.assign({}, postOrComment.user);
 
-    // post
-    const sanitizedPost = Object.assign(post, { user: { id, name, roles, isActive } });
-    if (sanitizedPost.image) {
-      delete sanitizedPost.image.image;
+    // post or comment
+    const sanitizedPostOrComment = Object.assign(postOrComment, { user: { id, name, roles, isActive } });
+    if (sanitizedPostOrComment.image && sanitizedPostOrComment.image.image) {
+      delete sanitizedPostOrComment.image.image;
     }
 
-    return sanitizedPost;
+    return sanitizedPostOrComment;
   }
 }

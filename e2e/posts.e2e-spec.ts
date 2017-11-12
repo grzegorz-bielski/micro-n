@@ -3,91 +3,100 @@ import * as faker from 'faker';
 import * as express from 'express';
 import * as path from 'path';
 import { Test } from '@nestjs/testing';
-import { Repository } from 'typeorm';
+import { Repository, Connection } from 'typeorm';
 
+import { flushDb, populateDb } from './seed';
 import { getImage, deleteImage } from '../src/modules/common/util/files';
 import { setUpConfig } from '../src/config/configure';
 import { configureApp } from '../src/server';
 import { User } from '../src/modules/users/interfaces/user.interface';
 import { UserEntity } from '../src/modules/users/entities/user.entity';
 import { PostEntity } from '../src/modules/posts/entities/post.entity';
+import { CommentEntity } from '../src/modules/comments/entities/comment.entity';
 import { PostImageEntity } from '../src/modules/posts/entities/post-image.entity';
 import { AuthModule } from '../src/modules/auth/auth.module';
+import { DatabaseModule } from '../src/modules/database/database.module';
 import { UsersModule } from '../src/modules/users/users.module';
 import { PostsModule } from '../src/modules/posts/posts.module';
 import { PostsService } from '../src/modules/posts/services/posts.service';
+import { MySQLConnectionToken } from '../src/modules/constants';
 
 // bigger timeout to populate / flush db
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('PostsModule', () => {
+  // server config
   const prefix = 'api';
   const server = express();
-  let dbUsers: UserEntity[];
-  let generatedUsers: User[];
-  let dbPosts: PostEntity[];
+
+  // module config
   let postsService: PostsService;
-  let userRepository: Repository<UserEntity>;
+  let connection: Connection;
   let postRepository: Repository<PostEntity>;
-  // let postImagageRepository: Repository<PostImageEntity>;
 
-  const flushDb = async (): Promise<void> => {
-    await postRepository
-      .createQueryBuilder('post_image')
-      .delete()
-      .from(PostImageEntity)
-      .execute();
+  // dummy content
+  let generatedUsers: User[];
+  let dbUsers: UserEntity[];
+  let dbPosts: PostEntity[];
+  let dbComments: CommentEntity[];
 
-    await postRepository
-      .createQueryBuilder('post')
-      .delete()
-      .from(PostEntity)
-      .execute();
+  // const flushDb = async (): Promise<void> => {
+  //   await postRepository
+  //     .createQueryBuilder('post_image')
+  //     .delete()
+  //     .from(PostImageEntity)
+  //     .execute();
 
-    await userRepository
-      .createQueryBuilder('user')
-      .delete()
-      .from(UserEntity)
-      .execute();
+  //   await postRepository
+  //     .createQueryBuilder('post')
+  //     .delete()
+  //     .from(PostEntity)
+  //     .execute();
 
-  };
-  const populateDb = async (): Promise<{
-    usersEntity: UserEntity[],
-    postsEntity: PostEntity[],
-    users: User[],
-  }> => {
-    const generateAndCreatePosts = (postUser: UserEntity, numberOf: number = 5): PostEntity[] => {
-      const posts: PostEntity[] = [];
-      for (let i = 0; i <= numberOf; i++) {
-        posts.push(Object.assign(new PostEntity(), {
-          content: faker.lorem.sentence(),
-          user: postUser,
-        }));
-      }
-      return posts;
-    };
-    const generateUsers = (numberOf: number = 5): User[] => {
-      const newUsers: User[] = [];
-      for (let i = 0; i < numberOf; i++) {
-        newUsers.push({
-          name: faker.name.firstName(),
-          email: faker.internet.email(),
-          password: faker.internet.password(),
-          isActive: i === 0 ? true : false,
-        });
-      }
-      return newUsers;
-    };
-    const users: User[] = generateUsers();
-    const usersEntity: UserEntity[] = await userRepository.save(
-      users.map(user => Object.assign(new UserEntity(), user)),
-    );
-    const postsEntity: PostEntity[] = await postRepository.save(
-      usersEntity.map(user => generateAndCreatePosts(user)).reduce((a, b) => a.concat(b)),
-    );
+  //   await userRepository
+  //     .createQueryBuilder('user')
+  //     .delete()
+  //     .from(UserEntity)
+  //     .execute();
 
-    return { usersEntity, postsEntity, users };
-  };
+  // };
+  // const populateDb = async (): Promise<{
+  //   usersEntity: UserEntity[],
+  //   postsEntity: PostEntity[],
+  //   users: User[],
+  // }> => {
+  //   const generateAndCreatePosts = (postUser: UserEntity, numberOf: number = 5): PostEntity[] => {
+  //     const posts: PostEntity[] = [];
+  //     for (let i = 0; i <= numberOf; i++) {
+  //       posts.push(Object.assign(new PostEntity(), {
+  //         content: faker.lorem.sentence(),
+  //         user: postUser,
+  //       }));
+  //     }
+  //     return posts;
+  //   };
+  //   const generateUsers = (numberOf: number = 5): User[] => {
+  //     const newUsers: User[] = [];
+  //     for (let i = 0; i < numberOf; i++) {
+  //       newUsers.push({
+  //         name: faker.name.firstName(),
+  //         email: faker.internet.email(),
+  //         password: faker.internet.password(),
+  //         isActive: i === 0 ? true : false,
+  //       });
+  //     }
+  //     return newUsers;
+  //   };
+  //   const users: User[] = generateUsers();
+  //   const usersEntity: UserEntity[] = await userRepository.save(
+  //     users.map(user => Object.assign(new UserEntity(), user)),
+  //   );
+  //   const postsEntity: PostEntity[] = await postRepository.save(
+  //     usersEntity.map(user => generateAndCreatePosts(user)).reduce((a, b) => a.concat(b)),
+  //   );
+
+  //   return { usersEntity, postsEntity, users };
+  // };
 
   setUpConfig();
 
@@ -104,27 +113,35 @@ describe('PostsModule', () => {
     ).init();
 
     const postModule = module.select<PostsModule>(PostsModule);
+    const dbModule = module.select<DatabaseModule>(DatabaseModule);
+    connection = dbModule.get(MySQLConnectionToken);
     postsService = postModule.get<PostsService>(PostsService);
-    // hacks...
-    // tslint:disable-next-line
-    userRepository = postsService['userRepository'];
+
+    // hack...
     // tslint:disable-next-line
     postRepository = postsService['postRepository'];
-
-    // PostImageEntity = postsService['post']
-
   });
 
   beforeEach(async () => {
-    await flushDb();
-    const reply = await populateDb();
-    dbUsers = reply.usersEntity;
-    dbPosts = reply.postsEntity;
-    generatedUsers = reply.users;
+    try {
+      await flushDb(connection);
+      const {
+        usersEntity,
+        postsEntity,
+        commentsEntity,
+        users,
+      } = await populateDb(connection);
+      dbUsers = usersEntity;
+      dbPosts = postsEntity;
+      dbComments = commentsEntity;
+      generatedUsers = users;
+    } catch (error) {
+      console.log('DB ERROR', error);
+    }
   });
 
   afterAll(async () => {
-    await flushDb();
+    await flushDb(connection);
   });
 
   describe('GET /posts', () => {
@@ -275,11 +292,12 @@ describe('PostsModule', () => {
         .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
         .expect(200);
 
-      const { body: patchPostBody } = await request(server)
+      const { body: deletePostBody } = await request(server)
         .delete(`/${prefix}/posts/${dbPosts[0].id}`)
         .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(200);
+        .set('x-refresh', logInBody.meta.refreshToken);
+        // .expect(200);
+      console.log(deletePostBody);
 
       const dbPost = await postRepository.findOneById(dbPosts[0].id);
 

@@ -11,6 +11,8 @@ import { MySQLConnectionToken, RedisClientToken } from '../../constants';
 import { UserEntity } from '../../users/entities/user.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { PostImageEntity } from '../../posts/entities/post-image.entity';
+import { CommentEntity } from '../../comments/entities/comment.entity';
+import { CommentImageEntity } from '../../comments/entities/comment-image.entity';
 
 let mysqlConnectionCounter = 0;
 
@@ -31,6 +33,8 @@ export const databaseProviders: IdatabaseProviders[] = [
           UserEntity,
           PostEntity,
           PostImageEntity,
+          CommentEntity,
+          CommentImageEntity,
         ],
         synchronize: true,
       });

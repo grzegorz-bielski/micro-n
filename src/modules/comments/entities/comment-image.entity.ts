@@ -8,10 +8,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { PostEntity } from './post.entity';
+import { CommentEntity } from './comment.entity';
 
 @Entity()
-export class PostImageEntity {
+export class CommentImageEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -21,9 +21,9 @@ export class PostImageEntity {
   @Column({ nullable: true })
   public directLink: string;
 
-  @OneToOne(type => PostEntity, postEntity => postEntity.image)
+  @OneToOne(type => CommentEntity, commentEntity => commentEntity.image, { eager: true })
   @JoinColumn()
-  public post: PostEntity;
+  public post: CommentEntity;
 
   // meta
 

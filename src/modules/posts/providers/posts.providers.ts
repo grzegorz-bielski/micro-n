@@ -7,6 +7,7 @@ import {
   UserRepositoryToken,
   MySQLConnectionToken,
   PostImageRepositoryToken,
+  CommentRepositoryToken,
 } from '../../constants';
 
 export const postProviders = [

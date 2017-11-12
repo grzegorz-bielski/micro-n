@@ -54,6 +54,6 @@ export const getImage = async (generatedName: string): Promise<Buffer> => {
   try {
     return await readFileAsync(path.resolve(__dirname, '../../..', `public/images/${generatedName}`));
   } catch (error) {
-    throw new HttpException('Couldn\'t delete image', HttpStatus.INTERNAL_SERVER_ERROR);
+    throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };

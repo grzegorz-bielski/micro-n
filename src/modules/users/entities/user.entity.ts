@@ -31,7 +31,7 @@ export class UserEntity {
   @Column({ length: 100 })
   public password: string;
 
-  @OneToMany(type => PostEntity, postEntity => postEntity.user)
+  @OneToMany(type => PostEntity, postEntity => postEntity.user, { eager: true })
   public posts: PostEntity[];
 
   // metadata

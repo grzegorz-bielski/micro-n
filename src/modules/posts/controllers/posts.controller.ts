@@ -9,13 +9,15 @@ import {
   Delete,
   Request,
   UseInterceptors,
+  HttpStatus,
 } from '@nestjs/common';
+import { HttpException } from '@nestjs/core';
 
 import { PostsService } from '../services/posts.service';
-import { SanitizationInterceptor } from '../interceptors/sanitization.interceptor';
 import { PostDto } from '../dto/post.dto';
 import { PostEntity } from '../entities/post.entity';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { SanitizationInterceptor } from '../../common/interceptors/content-sanitization.interceptor';
 import { ForbiddenException } from '../../common/exceptions/forbidden.exception';
 import { NotFoundException } from '../../common/exceptions/notFound.exception';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -56,11 +58,20 @@ export class PostsController {
 
   @Patch('/:id')
   @Roles('user')
-  public async updatePost(@Param() params: { id: string }, @Body() body, @Request() req) {
+  public async updatePost(
+    @Param() params: { id: string },
+    @Body() body: PostDto,
+    @Request() req,
+  ) {
+    const post: PostEntity = await this.postsService.getPost(Number.parseInt(params.id));
+
+    if (post.user.id !== req.user.id) {
+      throw new HttpException('You can\'t update this post', HttpStatus.FORBIDDEN);
+    }
+
     return {
       data: await this.postsService.updatePost({
-        userId: req.user.id,
-        postId: Number.parseInt(params.id),
+        post,
         content: body.content,
         image: body.image,
       }),
@@ -70,10 +81,13 @@ export class PostsController {
   @Delete('/:id')
   @Roles('user')
   public async deletePost(@Param() params: { id: string }, @Request() req) {
-    await this.postsService.deletePost({
-      userId: req.user.id,
-      postId: Number.parseInt(params.id),
-    });
+    const post: PostEntity = await this.postsService.getPost(Number.parseInt(params.id));
+
+    if (post.user.id !== req.user.id) {
+      throw new HttpException('You can\'t delete this post', HttpStatus.FORBIDDEN);
+    }
+
+    await this.postsService.deletePost(post);
   }
 
 }

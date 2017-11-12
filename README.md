@@ -4,7 +4,7 @@
 
 **Currently in active development.**
 
-Being build with
+Being built with
 [Nest framework](https://github.com/kamilmysliwiec/nest), TypeORM (MySQL), Redis, Nodemailer, JWT, class-validator and Jest.
 
 ## Installation & start
