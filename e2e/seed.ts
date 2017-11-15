@@ -93,7 +93,8 @@ export async function populateDb(connection: Connection): Promise<DbContent> {
     usersEntity.map(user => generateAndCreatePosts(user)).reduce((a, b) => a.concat(b)),
   );
   const commentsEntity: CommentEntity[] = await commentRepository.save(
-    generateAndCreateComments(postsEntity[0], usersEntity[0]),
+    // generateAndCreateComments(postsEntity[0], usersEntity[0]),
+    usersEntity.map(user => generateAndCreateComments(postsEntity[0], user)).reduce((a, b) => a.concat(b)),
   );
 
   return { usersEntity, postsEntity, commentsEntity, users };

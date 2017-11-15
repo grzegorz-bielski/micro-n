@@ -301,7 +301,49 @@ describe('CommentsModule', () => {
 
   describe('DELETE /comments/:id', () => {
     it('should delete comment if user is valid', async () => {
-      // TODO
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      // delete
+      const { body: updateCommentBody } = await request(server)
+        .delete(`/${prefix}/comments/${dbComments[0].id}`)
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(200);
+
+      const dbComment = await commentRepository.findOneById(dbComments[0].id);
+
+      expect(dbComment).toBeUndefined();
+    });
+
+    it('should throw HttpException if tokens are invalid', async () => {
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      // delete
+      await request(server)
+        .delete(`/${prefix}/comments/${dbComments[0].id}`)
+        .set('x-auth', 'ergergergerg')
+        .set('x-refresh', 'rererereer')
+        .expect(401);
+      });
+
+    it('shouldn\'t delete post of other user', async () => {
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      // delete
+      await request(server)
+        .delete(`/${prefix}/comments/${dbComments[3].id}`)
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(403);
     });
   });
 

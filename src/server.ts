@@ -38,5 +38,6 @@ export const configureApp = (app: INestApplication): INestApplication => {
   const app: INestApplication = configureApp(
     await NestFactory.create(ApplicationModule, server),
   );
+
   await app.listen(Number.parseInt(process.env.PORT));
 })();

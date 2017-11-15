@@ -3,7 +3,8 @@ import config from './details/config';
 
 interface IenvConfig {
   PORT: number;
-  DATABASE_URL: string;
+  MYSQL_URL: string;
+  REDIS_DATABASE: number;
   JWT_SECRET: string;
 }
 
