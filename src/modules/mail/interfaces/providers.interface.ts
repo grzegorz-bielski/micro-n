@@ -1,4 +1,4 @@
 export interface ImailProviders {
-  provide: symbol;
+  provide: string;
   useFactory: () => Promise<any>;
 }

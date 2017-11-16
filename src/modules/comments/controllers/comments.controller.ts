@@ -3,6 +3,7 @@ import {
   UseGuards,
   Get,
   Post,
+  Query,
   Patch,
   Delete,
   Param,
@@ -14,6 +15,7 @@ import {
 import { HttpException } from '@nestjs/core';
 
 import { CommentDto } from '../dto/comment.dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CommentEntity } from '../entities/comment.entity';
 import { CommentsService } from '../services/comments.service';
 import { SanitizationInterceptor } from '../../common/interceptors/content-sanitization.interceptor';
@@ -29,12 +31,19 @@ export class CommentsController {
   ) {}
 
   @Get('/post/:id')
-  public async getComments(@Param() params: { id: string }) {
-    const postId: number = Number.parseInt(params.id);
+  public async getComments(
+    @Param() params: { id: string },
+    @Query() query: PaginationDto,
+  ) {
+    const postId = Number.parseInt(params.id);
+    const page = query && query.page ? Number.parseInt(query.page) : 1;
+    let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
+    if (limit > 50) limit = 50;
 
-    return {
-      data: await this.commentsService.getComments(postId),
-    };
+    const { comments, count, pages } = await this.commentsService.getComments({ postId, page, limit });
+
+    return { data: comments, meta: { count, pages } };
+
   }
 
   @Get('/:id')

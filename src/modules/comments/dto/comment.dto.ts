@@ -5,15 +5,15 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { CommentImageDto } from './comment-image.dto';
+import { ImageDto } from '../../common/dto/image.dto';
 
 export class CommentDto {
 
   @IsString()
   readonly content: string;
 
-  @ValidateNested()
   @IsOptional()
-  readonly image?: CommentImageDto;
+  @ValidateNested()
+  readonly image?: ImageDto;
 
 }

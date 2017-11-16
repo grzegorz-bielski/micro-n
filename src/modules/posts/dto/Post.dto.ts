@@ -5,7 +5,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { PostImageDto } from './post-image.dto';
+import { ImageDto } from '../../common/dto/image.dto';
 
 export class PostDto {
 
@@ -14,6 +14,6 @@ export class PostDto {
 
   @ValidateNested()
   @IsOptional()
-  readonly image?: PostImageDto;
+  readonly image?: ImageDto;
 
 }

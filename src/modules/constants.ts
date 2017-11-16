@@ -1,9 +1,9 @@
 
   export const MySQLConnectionToken = 'MySQLConnectionToken';
-  export const RedisClientToken = Symbol('RedisClientToken');
-  export const MailTransportToken = Symbol('MailTransportToken');
-  export const UserRepositoryToken = Symbol('UserRepositoryToken');
-  export const PostRepositoryToken = Symbol('PostRepositoryToken');
-  export const PostImageRepositoryToken = Symbol('PostImageRepositoryToken');
-  export const CommentRepositoryToken = Symbol('CommentsRepositoryToken');
-  export const CommentImageRepositoryToken = Symbol('CommentImageRepositoryToken');
+  export const RedisClientToken = 'RedisClientToken';
+  export const MailTransportToken = 'MailTransportToken';
+  export const UserRepositoryToken = 'UserRepositoryToken';
+  export const PostRepositoryToken = 'PostRepositoryToken';
+  export const PostImageRepositoryToken = 'PostImageRepositoryToken';
+  export const CommentRepositoryToken = 'CommentsRepositoryToken';
+  export const CommentImageRepositoryToken = 'CommentImageRepositoryToken';

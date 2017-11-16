@@ -44,21 +44,33 @@ export class PostsService {
     private readonly commentsService: CommentsService,
   ) {}
 
-  public async getPosts(): Promise<PostEntity[]> {
-    const posts: PostEntity[] = await this.postRepository
-      .find({ relations: ['user', 'image'] });
+  public async getPosts(page: number, limit: number) {
+    // TODO: count comments for each post
+    const offset = (page - 1) * limit;
+    const [posts, count] = await Promise.all([
+      this.postRepository.find({
+        relations: ['user', 'image'],
+        take: limit,
+        skip: offset,
+      }),
+      this.postRepository.count(),
+    ]);
 
-    if (!posts || posts.length <= 0) {
+    if (count <= 0 || posts.length <= 0) {
       throw new HttpException('There is no posts', HttpStatus.NOT_FOUND);
     }
 
-    return posts;
+    return { posts, count, pages: Math.ceil(count / limit) };
   }
 
   public async getPost(id: number): Promise<PostEntity> {
+    // TODO: load only 1 page of comments
     const post: PostEntity = await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('post.comments', 'comments')
+      .leftJoinAndSelect('comments.image', 'commentsImage')
+      .leftJoinAndSelect('comments.user', 'commentsUser')
       .leftJoinAndSelect('post.image', 'image')
       .where('post.id = :id', { id })
       .getOne();

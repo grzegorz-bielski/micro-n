@@ -2,7 +2,7 @@ import { Interceptor, NestInterceptor, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
-// for use with Posts and/or Comments
+// for use with Posts and Comments routes
 
 @Interceptor()
 export class SanitizationInterceptor implements NestInterceptor {
@@ -22,11 +22,15 @@ export class SanitizationInterceptor implements NestInterceptor {
   private sanitize(postOrComment) {
     // user
     const { id, name, roles, isActive } = Object.assign({}, postOrComment.user);
+    const sanitizedPostOrComment = Object.assign(postOrComment, { user: { id, name, roles, isActive } });
 
     // post or comment
-    const sanitizedPostOrComment = Object.assign(postOrComment, { user: { id, name, roles, isActive } });
     if (sanitizedPostOrComment.image && sanitizedPostOrComment.image.image) {
       delete sanitizedPostOrComment.image.image;
+    }
+    // comments of post(s)
+    if (postOrComment.comments) {
+      sanitizedPostOrComment.comments = [...postOrComment.comments.map(this.sanitize)];
     }
 
     return sanitizedPostOrComment;

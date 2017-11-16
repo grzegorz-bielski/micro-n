@@ -3,11 +3,11 @@ import {
   IsBase64,
   IsOptional,
   IsBoolean,
-  IsUrl,
   ValidateIf,
+  IsUrl,
 } from 'class-validator';
 
-export class CommentImageDto {
+export class ImageDto {
   @IsUrl()
   @IsOptional()
   public directLink?: string;

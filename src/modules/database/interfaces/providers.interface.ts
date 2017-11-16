@@ -1,4 +1,4 @@
 export interface IdatabaseProviders {
-  provide: symbol;
+  provide: string;
   useFactory: () => Promise<any>;
 }

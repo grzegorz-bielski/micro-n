@@ -32,6 +32,12 @@ interface IupdateComment extends IComment {
   comment: CommentEntity;
 }
 
+interface IComments {
+  postId: number;
+  page?: number;
+  limit?: number;
+}
+
 @Component()
 export class CommentsService {
   constructor(
@@ -45,17 +51,23 @@ export class CommentsService {
     private readonly commentImageRepository: Repository<CommentImageEntity>,
   ) {}
 
-  public async getComments(postId: number, ignoreError: boolean = false) {
-    const comments: CommentEntity[] = await this.commentRepository.find({
-      relations: ['user', 'image'],
-      where: { postId },
-    });
+  public async getComments(data: IComments, ignoreError: boolean = false) {
+    const { page, limit } = data;
+    const [ comments, count ] = await Promise.all([
+      this.commentRepository.find({
+        relations: ['user', 'image'],
+        where: { postId: data.postId },
+        take: limit ? limit : void 0,
+        skip: (page || limit) ? (page - 1) * limit : void 0,
+      }),
+      this.commentRepository.count(),
+    ]);
 
-    if ((!comments || comments.length <= 0) && !ignoreError) {
+    if ((count <= 0 || comments.length <= 0) && !ignoreError) {
       throw new HttpException('There is no comments for this post', HttpStatus.NOT_FOUND);
     }
 
-    return comments;
+    return { comments, count, pages: Math.ceil(count / limit) };
   }
 
   public async getComment(commentId: number, ignoreError: boolean = false) {
@@ -130,9 +142,9 @@ export class CommentsService {
     await this.commentRepository.remove(comment);
   }
 
-  public async deleteAllComments(id: number) {
-    const comments: CommentEntity[] = await this.getComments(id, true);
-    if (comments) {
+  public async deleteAllComments(postId: number) {
+    const { comments, count } = await this.getComments({ postId }, true);
+    if (comments && count > 0) {
       return Promise.all(comments.map(comment => this.deleteComment(comment)));
     }
   }

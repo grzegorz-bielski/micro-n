@@ -8,6 +8,7 @@ import {
   Patch,
   Delete,
   Request,
+  Query,
   UseInterceptors,
   HttpStatus,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { HttpException } from '@nestjs/core';
 
 import { PostsService } from '../services/posts.service';
 import { PostDto } from '../dto/post.dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PostEntity } from '../entities/post.entity';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { SanitizationInterceptor } from '../../common/interceptors/content-sanitization.interceptor';
@@ -31,10 +33,14 @@ export class PostsController {
   ) {}
 
   @Get()
-  public async getPosts() {
-    return {
-      data: await this.postsService.getPosts(),
-    };
+  public async getPosts(@Query() query: PaginationDto) {
+    const page = query && query.page ? Number.parseInt(query.page) : 1;
+    let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
+    if (limit > 50) limit = 50;
+
+    const { posts, count, pages } = await this.postsService.getPosts(page, limit);
+
+    return { data: posts, meta: { count, pages } };
   }
 
   @Get('/:id')
