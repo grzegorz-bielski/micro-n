@@ -1,11 +1,11 @@
-[![Nest Logo](http://kamilmysliwiec.com/public/nest-logo.png)](http://nestjs.com/)
+# Micro-N - Microblogging API 
 
-# Micro-N - Microblogging & Chat API 
+Being developed as backend for not yet existing web app.
 
 **Currently in active development.**
 
-Being built with
-[Nest framework](https://github.com/kamilmysliwiec/nest), TypeORM (MySQL), Redis, Nodemailer, JWT, class-validator and Jest.
+## Stack
+Node.js, [Nest framework](https://github.com/kamilmysliwiec/nest), TypeORM, MySQL, Redis, Nodemailer, JWT, class-validator and Jest.
 
 ## Installation & start
 
