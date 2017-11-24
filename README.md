@@ -21,3 +21,13 @@ $ npm run test:watch
 $ npm run e2e:watch
 ```
 
+## Todo
+- [ ] tags module (!)
+- [ ] tag subscriptions
+- [ ] unit tests for post, comments and tags module
+- [ ] notifications (new microservice?)
+- [ ] cache (?)
+- [ ] docker (?)
+
+
+

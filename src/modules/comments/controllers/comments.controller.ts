@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { HttpException } from '@nestjs/core';
 
-import { CommentDto } from '../dto/comment.dto';
+import { MsgDto } from '../../common/dto/msg.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CommentEntity } from '../entities/comment.entity';
 import { CommentsService } from '../services/comments.service';
@@ -59,7 +59,7 @@ export class CommentsController {
   @Roles('user')
   public async newComment(
     @Param() params: { id: string },
-    @Body() body: CommentDto,
+    @Body() body: MsgDto,
     @Request() req,
   ) {
     return {
@@ -76,7 +76,7 @@ export class CommentsController {
   @Roles('user')
   public async updateComment(
     @Param() params: { id: string },
-    @Body() body: CommentDto,
+    @Body() body: MsgDto,
     @Request() req,
   ) {
     const comment: CommentEntity = await this.commentsService.getComment(Number.parseInt(params.id));

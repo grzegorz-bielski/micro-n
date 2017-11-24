@@ -107,13 +107,25 @@ describe('CommentsModule', () => {
       expect(getCommentsBody.type).toBe('HttpException');
     });
 
-    it('should return all comments for given post', async () => {
+    it('should return all comments from 1st page for given post', async () => {
       const { body: getCommentsBody } = await request(server)
         .get(`/${prefix}/comments/post/${dbPosts[0].id}`)
         .expect(200);
 
       expect(getCommentsBody.data[0].id).toBe(dbComments[0].id);
       expect(getCommentsBody.data[0].content).toBe(dbComments[0].content);
+    });
+
+    it('should return 2 comments from 1st page for given post', async () => {
+      const { body: getCommentsBody } = await request(server)
+        .get(`/${prefix}/comments/post/${dbPosts[0].id}?page=1&limit=2`)
+        .expect(200);
+
+      // console.log(getCommentsBody);
+      expect(getCommentsBody.data[0].id).toBe(dbComments[0].id);
+      expect(getCommentsBody.data[0].content).toBe(dbComments[0].content);
+      expect(getCommentsBody.meta.count).toBe(15);
+      expect(getCommentsBody.meta.pages).toBe(8);
     });
   });
 

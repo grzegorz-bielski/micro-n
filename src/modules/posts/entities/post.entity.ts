@@ -9,6 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  RelationCount,
 } from 'typeorm';
 
 import { UserEntity } from '../../users/entities/user.entity';
@@ -36,6 +37,9 @@ export class PostEntity {
 
   @OneToMany(type => CommentEntity, commentEntity => commentEntity.post)
   public comments: CommentEntity[];
+
+  @RelationCount((post: PostEntity) => post.comments)
+  public commentsCount: number;
 
   // metadata
 

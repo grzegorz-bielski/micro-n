@@ -87,7 +87,7 @@ describe('PostsModule', () => {
   });
 
   describe('GET /posts', () => {
-    it('should return an array of posts', async () => {
+    it('should return an array of posts for 1st page', async () => {
       const { body } = await request(server)
         .get(`/${prefix}/posts`)
         .expect(200);
@@ -99,6 +99,19 @@ describe('PostsModule', () => {
       expect(dbPost).toBeDefined();
       expect(dbPost.id).toBe(body.data[0].id);
       expect(dbPost.content).toBe(body.data[0].content);
+    });
+
+    it('should return 2 posts from 1st page for given post', async () => {
+      const { body } = await request(server)
+        .get(`/${prefix}/posts?page=1&limit=2`)
+        .expect(200);
+
+      const dbPost = dbPosts.find(post => post.id === body.data[0].id);
+
+      expect(body.data[0].id).toBe(dbPost.id);
+      expect(body.data[0].content).toBe(dbPost.content);
+      expect(body.meta.count).toBe(30);
+      expect(body.meta.pages).toBe(15);
     });
   });
 
@@ -121,14 +134,14 @@ describe('PostsModule', () => {
     });
   });
 
-  describe('POST /posts/new', () => {
+  describe('POST /posts', () => {
     it('should throw HttpException for unauthorized request', async () => {
       const { body } = await request(server)
         .post(`/${prefix}/posts`)
         .send({ content: 'ewefwf' })
         .expect(403);
 
-      expect(body.type).toBe('HttpException');
+      expect(body.message).toBe('Forbidden resource');
     });
 
     it('should throw HttpException for invalid access token', async () => {

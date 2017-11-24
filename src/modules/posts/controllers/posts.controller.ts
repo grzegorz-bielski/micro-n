@@ -15,7 +15,7 @@ import {
 import { HttpException } from '@nestjs/core';
 
 import { PostsService } from '../services/posts.service';
-import { PostDto } from '../dto/post.dto';
+import { MsgDto } from '../../common/dto/msg.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PostEntity } from '../entities/post.entity';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -52,7 +52,7 @@ export class PostsController {
 
   @Post()
   @Roles('user')
-  public async newPost(@Body() body: PostDto, @Request() req) {
+  public async newPost(@Body() body: MsgDto, @Request() req) {
      return {
        data: await this.postsService.newPost({
          userId: req.user.id,
@@ -66,7 +66,7 @@ export class PostsController {
   @Roles('user')
   public async updatePost(
     @Param() params: { id: string },
-    @Body() body: PostDto,
+    @Body() body: MsgDto,
     @Request() req,
   ) {
     const post: PostEntity = await this.postsService.getPost(Number.parseInt(params.id));

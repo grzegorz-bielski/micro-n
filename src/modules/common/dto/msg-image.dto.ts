@@ -7,7 +7,7 @@ import {
   IsUrl,
 } from 'class-validator';
 
-export class ImageDto {
+export class MsgImageDto {
   @IsUrl()
   @IsOptional()
   public directLink?: string;
