@@ -22,6 +22,7 @@ $ npm run e2e:watch
 ```
 
 ## Todo
+- [ ] password reset
 - [ ] tags module (!)
 - [ ] tag subscriptions
 - [ ] unit tests for post, comments and tags module

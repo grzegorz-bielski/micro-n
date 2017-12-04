@@ -1,3 +1,4 @@
+import * as http from 'http';
 import * as compression from 'compression';
 import * as bodyParser from 'body-parser';
 import * as helmet from 'helmet';
@@ -12,6 +13,10 @@ import { ValidationPipe } from './modules/common/pipes/validation.pipe';
 import { TokenInterceptor } from './modules/auth/interceptors/token.interceptor';
 import { TimestampInterceptor } from './modules/common/interceptors/timestamp.interceptor';
 import { HttpExceptionFilter } from './modules/common/filters/httpException.filter';
+
+setUpConfig();
+
+const port = Number.parseInt(process.env.PORT);
 
 export const configureApp = (app: INestApplication): INestApplication => {
   // express config
@@ -32,12 +37,13 @@ export const configureApp = (app: INestApplication): INestApplication => {
 
 // start server
 (async () => {
-  setUpConfig();
 
-  const server: express.Express = express();
-  const app: INestApplication = configureApp(
-    await NestFactory.create(ApplicationModule, server),
-  );
+  const server = await configureApp(
+    await NestFactory.create(ApplicationModule),
+  ).listen(port);
 
-  await app.listen(Number.parseInt(process.env.PORT));
+  // setup custom listeners
+  // server.on('error', errorHandler);
+
+  console.log(`App started at port: ${port}`);
 })();

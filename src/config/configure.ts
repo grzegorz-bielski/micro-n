@@ -14,12 +14,6 @@ interface Iconfig {
   production: object;
 }
 
-const listenForPromiseRejections = (): void => {
-  process.on('unhandledRejection', (reason, promise) => {
-    console.log(`Unhandled Rejection at: Promise ${JSON.stringify(promise)} reason: ${JSON.stringify(reason)}`);
-  });
-};
-
 const setUpEnvVariables = (envConfig: IenvConfig): void => {
   Object.keys(envConfig).forEach(key => process.env[key] = envConfig[key]);
 };
@@ -32,7 +26,6 @@ export const setUpConfig = (): void => {
 
   if (env === 'development' || env === 'test') {
     setUpEnvVariables(variables[env]);
-    listenForPromiseRejections();
   }
 };
 

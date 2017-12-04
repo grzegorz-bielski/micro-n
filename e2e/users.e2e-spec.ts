@@ -1,6 +1,7 @@
 import * as request from 'supertest';
 import * as express from 'express';
 import * as faker from 'faker';
+import * as bcrypt from 'bcryptjs';
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { Repository } from 'typeorm';
@@ -10,7 +11,7 @@ import { User } from '../src/modules/users/interfaces/user.interface';
 import { setUpConfig } from '../src/config/configure';
 import { configureApp } from '../src/server';
 import { UsersModule } from '../src/modules/users/users.module';
-import { SignUpUserDto } from '../src/modules/users/dto/SignUpUser.dto';
+import { SignUpUserDto } from '../src/modules/users/dto/sign-up.dto';
 import { UserEntity } from '../src/modules/users/entities/user.entity';
 import { UsersService } from '../src/modules/users/services/users.service';
 import { VerificationService } from '../src/modules/users/services/verification.service';
@@ -88,7 +89,7 @@ describe('Users', () => {
 
   });
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await flushDb();
     const response = await populateDb();
     users = response.users;
@@ -162,7 +163,7 @@ describe('Users', () => {
   });
 
   describe('GET /users/verify', () => {
-    it('should HttpException for invalid hash', async () => {
+    it('should throw HttpException for invalid hash', async () => {
       const hash = '3kekt45tvtv4';
       const response = await request(server)
         .get(`/${prefix}/users/verify?hash=${hash}`)
@@ -191,6 +192,54 @@ describe('Users', () => {
       expect(verifyResponse.text).toBeDefined();
       expect(dbUserBefore.isActive).toBe(false);
       expect(dbUserAfter.isActive).toBe(true);
+    });
+  });
+
+  describe('GET /:id/resetpassword', () => {
+    it('should throw HttpException if user is not found', async () => {
+      await request(server)
+        .get(`/${prefix}/users/4574745645645645/resetpassword`)
+        .expect(404);
+    });
+
+    it('should send reset password request', async () => {
+      await request(server)
+        .get(`/${prefix}/users/${dbUsers[0].id}/resetpassword`)
+        .expect(200);
+    });
+  });
+
+  describe('POST /resetpassword', () => {
+    it('should throw HttpException for invalid hash', async () => {
+      const hash = '3kekt45tvtv4';
+      const response = await request(server)
+        .post(`/${prefix}/users/resetpassword`)
+        .send({ hash, newPassword: '123' })
+        .expect(400);
+      const text = JSON.parse(response.text);
+
+      expect(text.type).toBe('HttpException');
+    });
+
+    it('should reset password if hash is in DB', async () => {
+      const newPassword = '123';
+      // hack for testing
+      // tslint:disable-next-line
+      const hash = await verificationService['generateAndStoreHash'](dbUsers[0].id);
+
+      const response = await request(server)
+        .post(`/${prefix}/users/resetpassword`)
+        .send({ hash, newPassword })
+        .expect(200);
+
+      const updatedUser = await userRepository.findOneById(dbUsers[0].id);
+      const isTheSame = await bcrypt.compare(newPassword, updatedUser.password);
+
+      expect(updatedUser.password).not.toBe(newPassword);
+      expect(updatedUser.password).not.toBe(dbUsers[0].password);
+      // console.log(updatedUser.password);
+      // console.log(dbUsers[0].password);
+      expect(isTheSame).toBe(true);
     });
   });
 

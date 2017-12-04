@@ -13,14 +13,17 @@ import {
   HttpStatus,
   ReflectMetadata,
   Query,
+  Param,
   UseInterceptors,
+  HttpException,
 } from '@nestjs/common';
 
-import { SignUpUserDto } from '../dto/SignUpUser.dto';
-import { VerificationQueryDto } from '../dto/VerificationQuery.dto';
-import { LogInCredentialsDto } from '../dto/LogInCredentials.dto';
-import { UserEntity } from '../entities/user.entity';
+import { SignUpUserDto } from '../dto/sign-up.dto';
+import { VerificationQueryDto } from '../dto/verification-query.dto';
+import { LogInCredentialsDto } from '../dto/log-in-credentials.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 
+import { UserEntity } from '../entities/user.entity';
 import { UsersService } from '../services/users.service';
 import { AuthService, IaccessTokenData } from '../../auth/services/auth.service';
 import { VerificationService } from '../services/verification.service';
@@ -49,12 +52,6 @@ export class UsersController {
     private readonly verificationService: VerificationService,
   ) {}
 
-  // @Get()
-  // @Roles('admin')
-  // async getAll(): Promise<UserEntity[]> {
-  //   return this.usersService.getAll();
-  // }
-
   @Post('/signup')
   public async signUp(@Body() user: SignUpUserDto, @Request() request): Promise<void | { hash: string }> {
     // check if given credentials are available
@@ -70,27 +67,12 @@ export class UsersController {
     const { hash } = await this.verificationService.sendVerificationEmail({
       id: newUser.id.toString(),
       email: newUser.email,
-      host: request.get('host'),
-      protocol: request.protocol,
     });
 
     // return hash in test env
     if (process.env.NODE_ENV === 'test') {
       return { hash };
     }
-  }
-
-  @Get('/verify')
-  public async verifyUser( @Query() query: VerificationQueryDto ) {
-    // verify user
-    const id: string = await this.verificationService.verify(query.hash);
-    // update user status & delete hash
-    await Promise.all([
-      this.usersService.updateStatus(id, true),
-      this.verificationService.deleteHash(query.hash),
-    ]);
-    // TODO: render nice verification msg
-    return 'verified';
   }
 
   @Post('/login')
@@ -136,8 +118,40 @@ export class UsersController {
     return this.authService.revokeAllRefreshTokens(request.user.id);
   }
 
+  @Get('/verify')
+  public async verifyUser(@Query() query: VerificationQueryDto) {
+    // verify user
+    const id: string = await this.verificationService.verify(query.hash);
+    // update user status & delete hash
+    await Promise.all([
+      this.usersService.updateUser(id, { isActive: true }),
+      this.verificationService.deleteHash(query.hash),
+    ]);
+  }
+
+  @Get('/:id/resetpassword')
+  public async resetPasswordRequest(@Param() params: { id: string }): Promise<void> {
+    const user = await this.usersService.getUser(params.id);
+    if (!user) {
+      throw new HttpException('There is no such user', HttpStatus.NOT_FOUND);
+    }
+    await this.verificationService.sendResetPasswordRequest({ id: user.id, email: user.email });
+  }
+
+  @HttpCode(200)
+  @Post('/resetpassword')
+  public async resetPassword(@Body() body: ResetPasswordDto): Promise<void> {
+    // check if hash is in Redis
+    const id: string = await this.verificationService.verify(body.hash);
+    // set new password & delete hash
+    await Promise.all([
+      this.usersService.updateUser(id, { password: body.newPassword }),
+      this.verificationService.deleteHash(body.hash),
+    ]);
+  }
+
   @All('*')
-  all( @Request() req) {
+  public all( @Request() req) {
     throw new NotFoundException(req.route.path);
   }
 }

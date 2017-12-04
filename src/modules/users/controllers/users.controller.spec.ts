@@ -7,8 +7,8 @@ import { AuthModule } from '../../auth/auth.module';
 import { MailModule } from '../../mail/mail.module';
 
 import { NotFoundException } from '../../common/exceptions/notFound.exception';
-import { SignUpUserDto } from '../dto/SignUpUser.dto';
-import { LogInCredentialsDto } from '../dto/LogInCredentials.dto';
+import { SignUpUserDto } from '../dto/sign-up.dto';
+import { LogInCredentialsDto } from '../dto/log-in-credentials.dto';
 import { userProviders } from './../providers/users.providers';
 import { UsersService } from '../services/users.service';
 import { UsersController} from './users.controller';
