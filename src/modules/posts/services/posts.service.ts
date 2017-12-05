@@ -14,22 +14,25 @@ import { PostEntity } from '../entities/post.entity';
 import { CommentsService } from '../../comments/services/comments.service';
 import { PostImageEntity } from '../entities/post-image.entity';
 import { Image } from '../../common/interfaces/image.interface';
+import { TagEntity } from '../../tags/entities/tag.entity';
 
-interface InewPost {
-  userId: number;
+interface IPost {
   content: string;
   image: Image;
+  tags?: TagEntity[];
+}
+
+interface InewPost extends IPost {
+  userId: number;
+}
+
+interface IupdatePost extends IPost{
+  post: PostEntity;
 }
 
 interface IdeletePost {
   userId: number;
   postId: number;
-}
-
-interface IupdatePost {
-  image: Image;
-  content: string;
-  post: PostEntity;
 }
 
 @Component()
@@ -74,14 +77,13 @@ export class PostsService {
 
   public async newPost(data: InewPost): Promise<PostEntity> {
     const user: UserEntity = await this.userRepository.findOneById(data.userId);
-    const postImage: Image = data.image;
-    let postData: object = { content: data.content, user };
+    let postData: object = { content: data.content, tags: data.tags, user };
 
     if (!user) {
       throw new HttpException('There is no such user', HttpStatus.NOT_FOUND);
     }
 
-    postData = await this.persistImage(postImage, postData);
+    postData = await this.persistImage(data.image, postData);
 
     return this.postRepository.save(Object.assign(new PostEntity(), postData));
   }

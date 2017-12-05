@@ -31,10 +31,11 @@ export class UserEntity {
   @Column({ length: 100 })
   public password: string;
 
-  @OneToMany(type => PostEntity, postEntity => postEntity.user, { eager: true })
+  @OneToMany(type => PostEntity, postEntity => postEntity.user)
   public posts: PostEntity[];
 
   // metadata
+  // TODO: make separate entity
 
   @CreateDateColumn()
   public createdAt: string;

@@ -6,6 +6,7 @@ import {
   ManyToOne,
   OneToOne,
   OneToMany,
+  ManyToMany,
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
@@ -13,15 +14,17 @@ import {
 } from 'typeorm';
 
 import { UserEntity } from '../../users/entities/user.entity';
+import { TagEntity } from '../../tags/entities/tag.entity';
 import { PostImageEntity } from './post-image.entity';
 import { CommentEntity } from '../../comments/entities/comment.entity';
+import { MsgMetadataPartial } from '../../common/partial-entities/msg-metadata.partial-entity';
 
 @Entity()
 export class PostEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: false })
   public content: string;
 
   // relations
@@ -41,24 +44,11 @@ export class PostEntity {
   @RelationCount((post: PostEntity) => post.comments)
   public commentsCount: number;
 
-  // metadata
+  @ManyToMany(type => TagEntity, tagEntity => tagEntity.posts, { eager: true })
+  public tags: TagEntity[];
 
-  @Column({ type: 'int', default: 0 })
-  public score: number;
+  // embedded entities
 
-  @CreateDateColumn()
-  public createdAt: string;
-
-  @UpdateDateColumn()
-  public updatedAt: string;
-
-  // event listeners
-
-  @AfterInsert()
-  public addDefault() {
-    if (!this.score) {
-      this.score = 0;
-    }
-  }
-
+  @Column(type => MsgMetadataPartial)
+  public meta: MsgMetadataPartial;
 }
