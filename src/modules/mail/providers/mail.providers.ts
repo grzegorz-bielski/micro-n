@@ -1,14 +1,14 @@
+import { promisify } from 'util';
 import * as nodemailer from 'nodemailer';
 import * as smtpTransport from 'nodemailer-smtp-transport';
 import { MailTransportToken } from '../../constants';
 import { ImailProviders } from '../interfaces/providers.interface';
 import { getConfig } from '../../../config/configure';
 
-// Types for some 4.1.4 Nodemailer functions, not yet provided in @types/nodemailer
+// dummy types for some 4.1.4 Nodemailer functions, not yet provided in @types/nodemailer
 declare module 'nodemailer' {
-  export function createTestAccount(callback?: (error: any, account: object) => void): any;
+  export function createTestAccount(callback: any): any;
   export function getTestMessageUrl(info: any);
-
 }
 
 export const mailProviders: ImailProviders[] = [
@@ -19,14 +19,14 @@ export const mailProviders: ImailProviders[] = [
 
       if (process.env.NODE_ENV === 'test') {
         try {
-          const { auth } = getConfig('mail');
+          const account: any = await promisify(nodemailer.createTestAccount)();
           transporter = nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
-            secure: false,
+            host: account.smtp.host,
+            port: account.smtp.port,
+            secure: account.smtp.secure,
             auth: {
-                user: auth.user,
-                pass: auth.pass,
+                user: account.user,
+                pass: account.pass,
             },
           });
         } catch (error) {

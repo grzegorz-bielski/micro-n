@@ -73,17 +73,16 @@ describe('UsersController', () => {
 
       // spies
       const updateStatusMock = jest
-        .spyOn(usersService, 'updateStatus')
+        .spyOn(usersService, 'updateUser')
         .mockImplementation(() => {});
       const verifyMock = jest.fn((hashdata) => id);
       const deleteMock = jest.fn(() => {});
       verificationService.verify = verifyMock;
       verificationService.deleteHash = deleteMock;
 
-      const response: string = await usersController.verifyUser({ hash });
+      await usersController.verifyUser({ hash });
 
-      expect(response).toBeDefined();
-      expect(updateStatusMock).toBeCalledWith(id, true);
+      expect(updateStatusMock).toBeCalledWith(id, { isActive: true });
       expect(verifyMock).toBeCalledWith(hash);
       expect(deleteMock).toBeCalledWith(hash);
     });
@@ -92,10 +91,6 @@ describe('UsersController', () => {
   describe('signUp', () => {
     it('should call appropriate services', async () => {
       const hashMock = 'wrwerr23r2';
-      const requestMock = {
-        get: jest.fn(host => 'localhost'),
-        protocol: 'http',
-      };
 
       // spies
       const testMock = jest
@@ -108,23 +103,18 @@ describe('UsersController', () => {
         .spyOn(verificationService, 'sendVerificationEmail')
         .mockImplementation(() => ({ hash: hashMock }));
 
-      const { hash } = await usersController.signUp(userMock, requestMock) as { hash: string };
+      const { hash } = await usersController.signUp(userMock) as { hash: string };
 
       expect(hash).toBe(hashMock);
       expect(availabilityService.test).toBeCalled();
       expect(signUpMock).toBeCalledWith(userMock);
       expect(verificationService.sendVerificationEmail).toBeCalled();
-      expect(requestMock.get).toBeCalledWith('host');
     });
 
     it('shouldn\'t return hash when in env other than test', async () => {
       process.env.NODE_ENV = 'production';
 
       const hashMock = 'wrwerr23r2';
-      const requestMock = {
-        get: jest.fn(host => 'localhost'),
-        protocol: 'http',
-      };
 
       // spies
       const testMock = jest
@@ -137,7 +127,7 @@ describe('UsersController', () => {
         .spyOn(verificationService, 'sendVerificationEmail')
         .mockImplementation(() => ({ hash: hashMock }));
 
-      const reply = await usersController.signUp(userMock, requestMock);
+      const reply = await usersController.signUp(userMock);
 
       expect(reply).toBeUndefined();
 
