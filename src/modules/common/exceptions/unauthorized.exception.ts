@@ -1,5 +1,4 @@
-import { HttpException } from '@nestjs/core';
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, HttpException } from '@nestjs/common';
 import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 
 export class UnauthorizedException extends HttpException {

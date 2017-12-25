@@ -6,6 +6,7 @@ import { DatabaseModule } from '../database/database.module';
 // componets
 import { TagsService } from './services/tags.service';
 import { tagProviders } from './providers/tags.providers';
+import { TagsController } from './controllers/tags.controller';
 
 @Module({
   modules: [
@@ -14,6 +15,9 @@ import { tagProviders } from './providers/tags.providers';
   components: [
       ...tagProviders,
       TagsService,
+  ],
+  controllers: [
+    TagsController,
   ],
   exports: [
     TagsService,

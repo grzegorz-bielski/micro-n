@@ -1,9 +1,13 @@
-import { Component, Inject, HttpStatus } from '@nestjs/common';
-import { HttpException } from '@nestjs/core';
-import { Transporter, SentMessageInfo, getTestMessageUrl } from 'nodemailer';
+import { Component, Inject, HttpStatus, HttpException } from '@nestjs/common';
+import * as nodemailer from 'nodemailer';
 import { MailTransportToken } from '../../constants';
 import { IsendEmail } from '../interfaces/mail.interface';
 import { getConfig } from '../../../config/configure';
+
+// dummy types for some 4.1.4 Nodemailer functions, not yet provided in @types/nodemailer
+declare module 'nodemailer' {
+  function getTestMessageUrl(info: any);
+}
 
 // TODO:
 // - templates
@@ -20,10 +24,10 @@ export class MailService {
 
   constructor(
     @Inject(MailTransportToken)
-    private readonly transporter: Transporter,
+    private readonly transporter: nodemailer.Transporter,
   ) {}
 
-  public sendVerificationEmail(to: string, hash: string): Promise<SentMessageInfo> {
+  public sendVerificationEmail(to: string, hash: string): Promise<nodemailer.SentMessageInfo> {
     const html = `
       <h1>Thank you for registering to micro-n!</h1>
       <p>Here is your verification code:</p></br>
@@ -34,7 +38,7 @@ export class MailService {
     return this.sendEmail({ to, subject, html });
   }
 
-  public sendResetPasswordRequestEmail(to: string, hash: string): Promise<SentMessageInfo> {
+  public sendResetPasswordRequestEmail(to: string, hash: string): Promise<nodemailer.SentMessageInfo> {
     const html = `
       <h1>There has been a request to reset your password.</h1>
       <p>Here is your reset password code:</p></br>
@@ -46,13 +50,13 @@ export class MailService {
     return this.sendEmail({ to, subject, html });
   }
 
-  public async sendEmail(options: IsendEmail): Promise<SentMessageInfo> {
+  public async sendEmail(options: IsendEmail): Promise<nodemailer.SentMessageInfo> {
     try {
-      const info: SentMessageInfo =  await this.transporter.sendMail(Object.assign(this.transportOptions, options));
+      const info: nodemailer.SentMessageInfo =  await this.transporter.sendMail(Object.assign(this.transportOptions, options));
 
       // log link to preview in test env
       if (process.env.NODE_ENV === 'test') {
-        console.log(`Test email preview: ${ getTestMessageUrl(info)}`);
+        console.log(`Test email preview: ${ nodemailer.getTestMessageUrl(info)}`);
       }
 
       return info;

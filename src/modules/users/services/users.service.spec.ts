@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { HttpException } from '@nestjs/core';
+import { HttpException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { User } from './../interfaces/user.interface';

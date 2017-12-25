@@ -1,5 +1,4 @@
-import { Component, Inject, HttpStatus } from '@nestjs/common';
-import { HttpException } from '@nestjs/core';
+import { Component, Inject, HttpStatus, HttpException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 

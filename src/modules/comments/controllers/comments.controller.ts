@@ -11,13 +11,14 @@ import {
   Request,
   UseInterceptors,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
-import { HttpException } from '@nestjs/core';
 
 import { MsgDto } from '../../common/dto/msg.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CommentEntity } from '../entities/comment.entity';
 import { CommentsService } from '../services/comments.service';
+import { TagsService } from '../../tags/services/tags.service';
 import { SanitizationInterceptor } from '../../common/interceptors/content-sanitization.interceptor';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -28,6 +29,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class CommentsController {
   constructor(
     private readonly commentsService: CommentsService,
+    private readonly tagsService: TagsService,
   ) {}
 
   @Get('/post/:id')
@@ -68,6 +70,7 @@ export class CommentsController {
         postId: Number.parseInt(params.id),
         content: body.content,
         image: body.image,
+        tags: body.meta.tags ? await this.tagsService.createTags(body.meta.tags) : void 0,
       }),
     };
   }
@@ -90,6 +93,7 @@ export class CommentsController {
         comment,
         content: body.content,
         image: body.image,
+        tags: body.meta.tags ? await this.tagsService.createTags(body.meta.tags) : void 0,
       }),
     };
   }

@@ -7,8 +7,7 @@ import { getConfig } from '../../../config/configure';
 
 // dummy types for some 4.1.4 Nodemailer functions, not yet provided in @types/nodemailer
 declare module 'nodemailer' {
-  export function createTestAccount(callback: any): any;
-  export function getTestMessageUrl(info: any);
+  function createTestAccount(callback: any): any;
 }
 
 export const mailProviders: ImailProviders[] = [

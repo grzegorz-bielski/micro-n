@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import { Test } from '@nestjs/testing';
-import { HttpException } from '@nestjs/core';
+import { HttpException } from '@nestjs/common';
 import { setUpConfig } from '../../../config/configure';
 
 import { DatabaseModule } from '../../database/database.module';
@@ -8,7 +8,7 @@ import { MailModule } from '../../mail/mail.module';
 
 import { userProviders } from '../providers/users.providers';
 import { MailService } from '../../mail/services/mail.service';
-import { VerificationService, IverificationData } from '../services/verification.service';
+import { VerificationService } from '../services/verification.service';
 import { IRedisClientPromisifed } from '../../database/interfaces/database.interface';
 
 describe('VerificationService', () => {
@@ -113,7 +113,7 @@ describe('VerificationService', () => {
   });
 
   describe('sendVerificationEmail', () => {
-    const verificationData: IverificationData =  {
+    const verificationData =  {
       id: id.toString(),
       email: 'kek@example.com',
       host: 'localhost:3000',
