@@ -173,7 +173,7 @@ export class AuthService implements IAuthService {
       .find(tokenObj => tokenObj.token === data.refreshToken);
 
     if (!refreshTokenObj) {
-      throw new HttpException('Invalid refresh token', HttpStatus.NOT_FOUND);
+      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
     }
 
     return refreshTokenObj;

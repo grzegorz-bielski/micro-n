@@ -93,7 +93,7 @@ export class CommentsService {
       this.postRepository.findOneById(data.postId),
     ]);
     const commentImage: Image = data.image;
-    let commentData: object = { content: data.content, user, post };
+    let commentData: object = { content: data.content, tags: data.tags, user, post };
 
     if (!user) {
       throw new HttpException('There is no such user', HttpStatus.NOT_FOUND);
@@ -110,7 +110,7 @@ export class CommentsService {
   public async updateComment(data: IupdateComment) {
     const oldComment = data.comment;
     const commentImage: Image = data.image;
-    let commentData: object = { content: data.content };
+    let commentData: object = { content: data.content, tags: data.tags };
     let isDirectLink: boolean = false;
 
     if (commentImage && oldComment.image) {

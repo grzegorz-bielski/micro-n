@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   JoinTable,
   ManyToMany,
+  RelationCount,
   CreateDateColumn,
 } from 'typeorm';
 
@@ -21,7 +22,15 @@ export class TagEntity {
   @Column({ unique: true })
   public name: string;
 
-  // junction tables
+  // counters //
+
+  @RelationCount((tag: TagEntity) => tag.comments)
+  public commentsCount: number;
+
+  @RelationCount((tag: TagEntity) => tag.posts)
+  public postsCount: number;
+
+  // junction tables //
 
   // posts_tags
   @ManyToMany(type => PostEntity, postEntity => postEntity.tags)
