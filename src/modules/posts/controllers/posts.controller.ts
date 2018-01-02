@@ -58,7 +58,7 @@ export class PostsController {
         userId: req.user.id,
         content: body.content,
         image: body.image,
-        tags: body.meta.tags ? await this.tagsService.createTags(body.meta.tags) : void 0,
+        tags: (body.meta && body.meta.tags) ? await this.tagsService.createTags(body.meta.tags) : void 0,
       }),
     };
   }
@@ -81,7 +81,7 @@ export class PostsController {
         post,
         content: body.content,
         image: body.image,
-        tags: body.meta.tags ? await this.tagsService.createTags(body.meta.tags) : void 0,
+        tags: (body.meta && body.meta.tags) ? await this.tagsService.createTags(body.meta.tags) : void 0,
       }),
     };
   }
@@ -95,7 +95,11 @@ export class PostsController {
       throw new HttpException('You can\'t delete this post', HttpStatus.FORBIDDEN);
     }
 
-    await this.postsService.deletePost(post);
+    try {
+      await this.postsService.deletePost(post);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
 }

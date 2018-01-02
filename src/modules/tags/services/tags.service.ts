@@ -48,19 +48,25 @@ export class TagsService {
   }
 
   public async deleteTags(tagsEntity: TagEntity[]): Promise<void> {
-    await tagsEntity.forEach(tagEntity => this.deleteTag(tagEntity.name));
+    await Promise.all(tagsEntity.map(tagEntity => this.deleteTag(tagEntity.name)));
   }
 
   public async deleteTag(name: string): Promise<void> {
-    const tag: TagEntity = await this.getTag(name);
+    if (name) {
+      const tag: TagEntity = await this.getTag(name, true, true);
 
-    // delete if tag has no relations anymore
-    if (tag && (tag.posts.length <= 0 || tag.comments.length <= 0 )) {
-      await this.tagRepostiory.remove(tag);
+      // delete if tag has no relations
+      if (tag && (tag.posts.length <= 0 && tag.comments.length <= 0 )) {
+        await this.tagRepostiory.remove(tag);
+      }
     }
   }
 
-  public async getTag(name: string, loadRelations: boolean = true): Promise<TagEntity> {
+  public async getTag(
+    name: string,
+    loadRelations: boolean = true,
+    ignoreError: boolean = false,
+  ): Promise<TagEntity> {
     const tag = await this.tagRepostiory.findOne({
       where: { name },
       relations: loadRelations ? ['posts', 'comments'] : void 0,

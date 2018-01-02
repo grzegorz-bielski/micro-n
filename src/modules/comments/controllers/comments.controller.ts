@@ -70,7 +70,7 @@ export class CommentsController {
         postId: Number.parseInt(params.id),
         content: body.content,
         image: body.image,
-        tags: body.meta.tags ? await this.tagsService.createTags(body.meta.tags) : void 0,
+        tags: (body.meta && body.meta.tags) ? await this.tagsService.createTags(body.meta.tags) : void 0,
       }),
     };
   }
@@ -93,7 +93,7 @@ export class CommentsController {
         comment,
         content: body.content,
         image: body.image,
-        tags: body.meta.tags ? await this.tagsService.createTags(body.meta.tags) : void 0,
+        tags: (body.meta && body.meta.tags) ? await this.tagsService.createTags(body.meta.tags) : void 0,
       }),
     };
   }

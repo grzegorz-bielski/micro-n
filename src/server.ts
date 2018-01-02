@@ -36,14 +36,10 @@ export const configureApp = (app: INestApplication): INestApplication => {
 };
 
 // start server
+
 (async () => {
-
-  const server = await configureApp(
-    await NestFactory.create(ApplicationModule),
-  ).listen(port);
-
-  // setup custom listeners
-  // server.on('error', errorHandler);
-
-  console.log(`App started at port: ${port}`);
+  if (process.env.NODE_ENV !== 'test') {
+    await configureApp(await NestFactory.create(ApplicationModule))
+      .listen(port, () => console.log(`App started at port: ${port}`));
+  }
 })();

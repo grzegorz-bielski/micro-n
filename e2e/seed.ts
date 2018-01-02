@@ -1,20 +1,40 @@
 import * as crypto from 'crypto';
 import * as faker from 'faker';
-import { Repository, Connection, EntityManager } from 'typeorm';
+import { Connection } from 'typeorm';
 
-import { saveImage } from '../src/modules/common/util/files';
-import { User } from '../src/modules/users/interfaces/user.interface';
+// entities
 import { UserEntity } from '../src/modules/users/entities/user.entity';
+import { TagEntity } from '../src/modules/tags/entities/tag.entity';
 import { PostEntity } from '../src/modules/posts/entities/post.entity';
 import { CommentEntity } from '../src/modules/comments/entities/comment.entity';
 import { CommentImageEntity } from '../src/modules/comments/entities/comment-image.entity';
 import { PostImageEntity } from '../src/modules/posts/entities/post-image.entity';
 
-interface DbContent {
-  usersEntity: UserEntity[];
-  postsEntity: PostEntity[];
-  commentsEntity: CommentEntity[];
-  users: User[];
+import { saveImage } from '../src/modules/common/util/files';
+import { User } from '../src/modules/users/interfaces/user.interface';
+
+interface SeedGenerator {
+  numberOf: number;
+}
+
+interface PostGenerator extends SeedGenerator {
+  user: UserEntity;
+  tags?: TagEntity[];
+}
+
+interface CommentGenerator extends PostGenerator {
+  post: PostEntity;
+}
+
+interface Entities {
+  dbUsers: UserEntity[];
+  dbPosts: PostEntity[];
+  dbComments: CommentEntity[];
+  dbTags: TagEntity[];
+}
+
+export interface DbContent extends Entities {
+  generatedUsers: User[];
 }
 
 export const dummyImage = {
@@ -24,32 +44,42 @@ export const dummyImage = {
   // image: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
 };
 
-const generateAndCreatePosts = (postUser: UserEntity, numberOf: number = 5): PostEntity[] => {
-  const posts: PostEntity[] = [];
+const generateAndCreateTags = ({ numberOf }: SeedGenerator): TagEntity[] => {
+  const tags: TagEntity[] = [];
   for (let i = 0; i <= numberOf; i++) {
+    tags.push(Object.assign(new TagEntity(), { name: faker.random.word() }));
+  }
+  return tags;
+};
+
+const generateAndCreatePosts = (data: PostGenerator): PostEntity[] => {
+  const posts: PostEntity[] = [];
+  for (let i = 0; i <= data.numberOf; i++) {
     posts.push(Object.assign(new PostEntity(), {
+      user: data.user,
+      tags: data.tags ? data.tags : void 0,
       content: faker.lorem.sentence(),
-      user: postUser,
       image: i === 0 ? Object.assign(new PostImageEntity(), dummyImage) : void 0,
     }));
   }
   return posts;
 };
 
-const generateAndCreateComments = (post: PostEntity, commentUser: UserEntity, numberOf: number = 2): CommentEntity[] => {
+const generateAndCreateComments = (data: CommentGenerator): CommentEntity[] => {
   const comments: CommentEntity[] = [];
-  for (let i = 0; i <= numberOf; i++) {
+  for (let i = 0; i <= data.numberOf; i++) {
     comments.push(Object.assign(new CommentEntity(), {
-      post,
+      post: data.post,
+      user: data.user,
+      tags: data.tags ? data.tags : void 0,
       content: faker.lorem.sentence(),
-      user: commentUser,
       image: i === 0 ? Object.assign( new CommentImageEntity(), dummyImage) : void 0,
     }));
   }
   return comments;
 };
 
-const generateUsers = (numberOf: number = 5): User[] => {
+const generateUsers = ({ numberOf }: SeedGenerator): User[] => {
   const newUsers: User[] = [];
   for (let i = 0; i < numberOf; i++) {
     newUsers.push({
@@ -65,18 +95,20 @@ const generateUsers = (numberOf: number = 5): User[] => {
 export async function flushDb(connection: Connection): Promise<void> {
   const deleteQuery = connection.manager.createQueryBuilder().delete();
 
-  // flushing actions should be in order:
-  //
-  // 1. comments images
-  await deleteQuery.from(CommentImageEntity).execute();
-  // 2. comments
+  // flushing actions should be in order
+  await Promise.all([
+    deleteQuery.from('tag_entity_comments_comment_entity').execute(),
+    deleteQuery.from('tag_entity_posts_post_entity').execute(),
+    deleteQuery.from(CommentImageEntity).execute(),
+    deleteQuery.from(PostImageEntity).execute(),
+  ]);
   await deleteQuery.from(CommentEntity).execute();
-  // 3. post images
-  await deleteQuery.from(PostImageEntity).execute();
-  // 4. posts
   await deleteQuery.from(PostEntity).execute();
-  // 5. users
-  await deleteQuery.from(UserEntity).execute();
+  await Promise.all([
+    deleteQuery.from(TagEntity).execute(),
+    deleteQuery.from(UserEntity).execute(),
+  ]);
+
 }
 
 export async function populateDb(connection: Connection): Promise<DbContent> {
@@ -84,18 +116,39 @@ export async function populateDb(connection: Connection): Promise<DbContent> {
   const userRepository = connection.getRepository(UserEntity);
   const postRepository = connection.getRepository(PostEntity);
   const commentRepository = connection.getRepository(CommentEntity);
+  const tagRepository = connection.getRepository(TagEntity);
 
-  const users: User[] = generateUsers();
+  // user
+  const users: User[] = generateUsers({ numberOf: 3 });
   const usersEntity: UserEntity[] = await userRepository.save(
     users.map(user => Object.assign(new UserEntity(), user)),
   );
-  const postsEntity: PostEntity[] = await postRepository.save(
-    usersEntity.map(user => generateAndCreatePosts(user)).reduce((a, b) => a.concat(b)),
-  );
-  const commentsEntity: CommentEntity[] = await commentRepository.save(
-    // generateAndCreateComments(postsEntity[0], usersEntity[0]),
-    usersEntity.map(user => generateAndCreateComments(postsEntity[0], user)).reduce((a, b) => a.concat(b)),
+
+  // tags
+  // const tagsEntityOne: TagEntity[] = generateAndCreateTags({ numberOf: 1 });
+  const tagsEntityTwo: TagEntity[] = await tagRepository.save(
+    generateAndCreateTags({ numberOf: 2 }),
   );
 
-  return { usersEntity, postsEntity, commentsEntity, users };
+  // posts
+  const postsEntity: PostEntity[] = await postRepository.save(
+    usersEntity
+      .map(user => generateAndCreatePosts({ user, numberOf: 5, tags: tagsEntityTwo }))
+      .reduce((a, b) => a.concat(b)),
+  );
+
+  // comments
+  const commentsEntity: CommentEntity[] = await commentRepository.save(
+    usersEntity
+      .map(user => generateAndCreateComments({user, numberOf: 5, post: postsEntity[0], tags: tagsEntityTwo }))
+      .reduce((a, b) => a.concat(b)),
+  );
+
+  return {
+    generatedUsers: users,
+    dbUsers: usersEntity,
+    dbPosts: postsEntity,
+    dbComments: commentsEntity,
+    dbTags: tagsEntityTwo,
+  };
 }

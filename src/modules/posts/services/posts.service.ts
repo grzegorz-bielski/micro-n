@@ -52,7 +52,7 @@ export class PostsService {
   public async getPosts(page: number, limit: number) {
     const offset = (page - 1) * limit;
     const [ posts, count ] = await this.postRepository.findAndCount({
-        relations: ['user', 'image', 'tags'],
+        relations: ['user', 'image'],
         take: limit,
         skip: offset,
     });

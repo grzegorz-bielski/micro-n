@@ -39,6 +39,7 @@ export const databaseProviders: IdatabaseProviders[] = [
           CommentImageEntity,
         ],
         synchronize: true,
+        // logging: ['error', 'warn'],
       });
 
       mysqlConnectionCounter++;

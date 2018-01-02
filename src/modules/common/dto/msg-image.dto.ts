@@ -1,11 +1,12 @@
 import {
+  Validate,
   IsString,
-  IsBase64,
   IsOptional,
   IsBoolean,
   ValidateIf,
   IsUrl,
 } from 'class-validator';
+import { IsBase64Data } from '../constraints/isBase64-data.constraint';
 
 export class MsgImageDto {
   @IsUrl()
@@ -14,11 +15,11 @@ export class MsgImageDto {
 
   // image upload
 
-  @ValidateIf(obj => !!obj.directLink)
-  @IsBase64()
+  @ValidateIf(obj => !obj.directLink)
+  @Validate(IsBase64Data)
   public image: string;
 
-  @ValidateIf(obj => !!obj.directLink)
+  @ValidateIf(obj => !obj.directLink)
   @IsString()
   public fileName: string;
 

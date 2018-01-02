@@ -25,7 +25,7 @@ export class TagsController {
   ) {}
 
   @Get('/:name')
-  public async getTaggedPosts( @Param() { name }: TagParamsDto, @Query() query: PaginationDto ) {
+  public async getTaggedContent( @Param() { name }: TagParamsDto, @Query() query: PaginationDto ) {
     const content = query.content === 'comments' ? 'comments' : 'posts';
     const page = query && query.page ? Number.parseInt(query.page) : 1;
     let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
