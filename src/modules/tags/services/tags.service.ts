@@ -57,6 +57,7 @@ export class TagsService {
 
       // delete if tag has no relations
       if (tag && (tag.posts.length <= 0 && tag.comments.length <= 0 )) {
+        console.log(tag.name);
         await this.tagRepostiory.remove(tag);
       }
     }
@@ -72,7 +73,7 @@ export class TagsService {
       relations: loadRelations ? ['posts', 'comments'] : void 0,
     });
 
-    if (!tag) {
+    if (!tag && !ignoreError) {
       throw new HttpException('Tag not found', HttpStatus.NOT_FOUND);
     }
 

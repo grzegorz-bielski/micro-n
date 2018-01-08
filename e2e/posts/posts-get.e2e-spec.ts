@@ -6,7 +6,8 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common/interfaces';
 import { Repository, Connection } from 'typeorm';
 
-import { DbContent, flushDb, populateDb } from '../seed';
+import { flushDb, populateDb } from '../seed/seed-gen';
+import { DbContent } from '../seed/seed-interfaces';
 import { getImage, deleteImage } from '../../src/modules/common/util/files';
 import { setUpConfig } from '../../src/config/configure';
 import { configureApp } from '../../src/server';

@@ -95,11 +95,7 @@ export class PostsController {
       throw new HttpException('You can\'t delete this post', HttpStatus.FORBIDDEN);
     }
 
-    try {
-      await this.postsService.deletePost(post);
-    } catch (error) {
-      console.log(error);
-    }
+    await this.postsService.deletePost(post);
   }
 
 }
