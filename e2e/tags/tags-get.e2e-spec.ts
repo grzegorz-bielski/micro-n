@@ -11,32 +11,32 @@ import { DbContent } from '../seed/seed-interfaces';
 import { getImage, deleteImage } from '../../src/modules/common/util/files';
 import { setUpConfig } from '../../src/config/configure';
 import { configureApp } from '../../src/server';
-import { User } from '../../src/modules/users/interfaces/user.interface';
 import { TagEntity } from '../../src/modules/tags/entities/tag.entity';
-import { UserEntity } from '../../src/modules/users/entities/user.entity';
 import { PostEntity } from '../../src/modules/posts/entities/post.entity';
 import { CommentEntity } from '../../src/modules/comments/entities/comment.entity';
-import { PostImageEntity } from '../../src/modules/posts/entities/post-image.entity';
-import { AuthModule } from '../../src/modules/auth/auth.module';
 import { DatabaseModule } from '../../src/modules/database/database.module';
 import { UsersModule } from '../../src/modules/users/users.module';
 import { PostsModule } from '../../src/modules/posts/posts.module';
+import { CommentsModule } from '../../src/modules/comments/comments.module';
 import { PostsService } from '../../src/modules/posts/services/posts.service';
+import { CommentsService } from '../../src/modules/comments/services/comments.service';
 import { MySQLConnectionToken } from '../../src/modules/constants';
 
 // bigger timeout to populate / flush db
 // jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
-describe('Posts PATCH', () => {
+describe('Tags GET', () => {
   // server config
   const prefix = 'api';
   const server = express();
   let app: INestApplication;
 
   // module config
-  let postsService: PostsService;
   let connection: Connection;
+  let postsService: PostsService;
   let postRepository: Repository<PostEntity>;
+  let commentsService: CommentsService;
+  let commentRepository: Repository<CommentEntity>;
 
   // dummy content
   let dbContent: DbContent;
@@ -55,12 +55,16 @@ describe('Posts PATCH', () => {
     await app.listen(8080);
 
     const postModule = module.select<PostsModule>(PostsModule);
+    const commentsModule = module.select<CommentsModule>(CommentsModule);
     const dbModule = module.select<DatabaseModule>(DatabaseModule);
     connection = dbModule.get(MySQLConnectionToken);
     postsService = postModule.get<PostsService>(PostsService);
-    // hack...
+    commentsService = commentsModule.get<CommentsService>(CommentsService);
+    // hacks...
     // tslint:disable-next-line
     postRepository = postsService['postRepository'];
+    // tslint:disable-next-line
+    commentRepository = commentsService['commentRepository'];
 
   });
 
@@ -81,59 +85,51 @@ describe('Posts PATCH', () => {
     }
   });
 
-  describe('/posts/:id', () => {
-    it('shouldn\'t update someone\'s else post', async () => {
-      const { dbPosts, generatedUsers } = dbContent;
-      const { body: logInBody } = await request(server)
-        .post(`/${prefix}/users/login`)
-        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+  describe('/tag/:name', () => {
+    it('should return posts when there is no query param for comments', async () => {
+      const tagName = dbContent.dbTags[0].name;
+      const { body } = await request(server)
+        .get(`/${prefix}/tag/${tagName}`)
         .expect(200);
 
-      const { body: patchPostBody } = await request(server)
-        .patch(`/${prefix}/posts/${dbPosts[7].id}`)
-        .send({ content: 'kek' })
-        .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(403);
+      const dbPosts = await postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.tags', 'tags')
+        .where('tags.name = :name', { name: tagName })
+        .take(10)
+        .skip(0)
+        .getMany();
 
-      expect(patchPostBody.type).toBe('HttpException');
+      expect(body.data).toHaveLength(10);
+      expect(body.data[0].content).toEqual(dbPosts[0].content);
+      expect(body.meta.count).toBe(18);
+      expect(body.meta.page).toBe(1);
+      expect(body.meta.pages).toBe(2);
+      expect(body.meta.tag.name).toBe(tagName);
+      expect(body.meta.content).toBe('posts');
     });
 
-    it('should update post of proper user', async () => {
-      const { dbPosts, generatedUsers } = dbContent;
-      const { body: logInBody } = await request(server)
-        .post(`/${prefix}/users/login`)
-        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+    it('should return comments when there is query param for comments', async () => {
+      const tagName = dbContent.dbTags[0].name;
+      const { body } = await request(server)
+        .get(`/${prefix}/tag/${tagName}?content=comments`)
         .expect(200);
 
-      const dbPostPre = await postRepository.findOneById(dbPosts[0].id);
-      const post = {
-        content: 'kek',
-        meta: {
-          tags: [
-            'kek', 'dummy',
-          ],
-        },
-      };
+      const dbComments = await commentRepository
+      .createQueryBuilder('comment')
+        .leftJoinAndSelect('comment.tags', 'tags')
+        .where('tags.name = :name', { name: tagName })
+        .take(10)
+        .skip(0)
+        .getMany();
 
-      expect(dbPostPre.tags).toHaveLength(3);
-      expect(dbPostPre.tags[0].name).not.toBe(post.meta.tags[0]);
-      expect(dbPostPre.content).not.toBe(post.content);
-
-      const { body: patchPostBody } = await request(server)
-        .patch(`/${prefix}/posts/${dbPosts[0].id}`)
-        .send(post)
-        .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(200);
-
-      const dbPost = await postRepository.findOneById(dbPosts[0].id);
-
-      expect(patchPostBody.data.content).toBe(post.content);
-      expect(patchPostBody.data.tags).toHaveLength(2);
-      expect(dbPost.tags).toHaveLength(2);
-      expect(dbPost.content).toBe(post.content);
-
+      expect(body.data).toHaveLength(10);
+      expect(body.data[0].content).toEqual(dbComments[0].content);
+      expect(body.meta.count).toBe(18);
+      expect(body.meta.page).toBe(1);
+      expect(body.meta.pages).toBe(2);
+      expect(body.meta.tag.name).toBe(tagName);
+      expect(body.meta.content).toBe('comments');
     });
   });
 });

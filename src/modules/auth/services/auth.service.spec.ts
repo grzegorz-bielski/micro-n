@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { promisify } from 'util';
 import { Test } from '@nestjs/testing';
-import { HttpException } from '@nestjs/core';
+import { HttpException } from '@nestjs/common';
 import { UnauthorizedException } from '../../common/exceptions/unauthorized.exception';
 import { AuthMiddleware, IparsedData } from '../middlewares/auth.middleware';
 import { setUpConfig } from '../../../config/configure';

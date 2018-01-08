@@ -110,6 +110,11 @@ describe('Posts POST', () => {
           isNsfw: false,
           image: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
         },
+        meta: {
+          tags: [
+            'marshmallow', 'dva', 'typescript',
+          ],
+        },
       };
       const { body: logInBody } = await request(server)
         .post(`/${prefix}/users/login`)
@@ -123,10 +128,23 @@ describe('Posts POST', () => {
         .set('x-refresh', logInBody.meta.refreshToken)
         .expect(201);
 
-      const image: Buffer = await getImage(newPostBody.data.image.fileName);
+      const [ image, dbPost ] = await Promise.all([
+        getImage(newPostBody.data.image.fileName),
+        postRepository.findOneById(newPostBody.data.id),
+      ]);
+
+      // post
+      expect(newPostBody.data.content).toBe(post.content);
+      expect(dbPost).toBeDefined();
+      expect(dbPost.id).toBe(newPostBody.data.id);
+      expect(dbPost.content).toBe(newPostBody.data.content);
+
+      // tags
+      expect(newPostBody.data.tags).toHaveLength(3);
+
+      // image
       expect(image).toBeDefined();
       expect(image).toBeInstanceOf(Buffer);
-      expect(newPostBody.data.content).toBe(post.content);
       expect(typeof newPostBody.data.image.fileName).toBe('string');
       expect(newPostBody.data.image.isNsfw).toBe(post.image.isNsfw);
 

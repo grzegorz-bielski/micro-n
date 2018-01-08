@@ -12,7 +12,8 @@ import { ApplicationModule } from './modules/app.module';
 import { ValidationPipe } from './modules/common/pipes/validation.pipe';
 import { TokenInterceptor } from './modules/auth/interceptors/token.interceptor';
 import { TimestampInterceptor } from './modules/common/interceptors/timestamp.interceptor';
-import { HttpExceptionFilter } from './modules/common/filters/httpException.filter';
+import { HttpExceptionFilter } from './modules/common/filters/http-exception.filter';
+import { InternalErrorFilter } from './modules/common/filters/internal-error.filter';
 
 setUpConfig();
 
@@ -28,7 +29,7 @@ export const configureApp = (app: INestApplication): INestApplication => {
   // nest global config
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(), new InternalErrorFilter());
   app.useGlobalInterceptors(new TimestampInterceptor());
   app.useGlobalInterceptors(new TokenInterceptor());
 

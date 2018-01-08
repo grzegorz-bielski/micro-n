@@ -45,7 +45,7 @@ export class AuthMiddleware implements NestMiddleware {
       decoded = await verifyAsync(accessToken,  process.env.JWT_SECRET) as IaccessTokenData;
     } catch (error) {
       if (error.name === 'TokenExpiredError' && refreshToken && this.autoRefresh) {
-        // if token has expired try to refresh it
+        // if token has expired try to refresh it based on provided refresh token
         decoded = jwt.decode(accessToken) as IaccessTokenData;
         newAccessToken = await this.authService.refreshAccessToken({ refreshToken, id: decoded.id });
       } else {

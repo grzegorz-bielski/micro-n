@@ -123,6 +123,11 @@ describe('Comments POST', () => {
           fileName: 'foo',
           image: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
         },
+        meta: {
+          tags: [
+            'marshmallow', 'dva', 'typescript',
+          ],
+        },
       };
 
       // login
@@ -139,13 +144,25 @@ describe('Comments POST', () => {
         .set('x-refresh', logInBody.meta.refreshToken)
         .expect(201);
 
-      const dbComment = await commentRepository.findOneById(newCommentBody.data.id);
+      // const dbComment = await commentRepository.findOneById(newCommentBody.data.id);
+      const [ image, dbComment ] = await Promise.all([
+        getImage(newCommentBody.data.image.fileName),
+        commentRepository.findOneById(newCommentBody.data.id),
+      ]);
 
+      // comment
       expect(newCommentBody.data).toBeDefined();
+      expect(newCommentBody.data.tags).toHaveLength(3);
       expect(newCommentBody.data.content).toBe(comment.content);
       expect(dbComment).toBeDefined();
       expect(dbComment.id).toBe(newCommentBody.data.id);
       expect(dbComment.content).toBe(newCommentBody.data.content);
+
+      // image
+      expect(image).toBeDefined();
+      expect(image).toBeInstanceOf(Buffer);
+      expect(typeof newCommentBody.data.image.fileName).toBe('string');
+      // expect(newCommentBody.data.image.isNsfw).toBe(comment.image.isNsfw);
 
       await deleteImage(newCommentBody.data.image.fileName);
     });
