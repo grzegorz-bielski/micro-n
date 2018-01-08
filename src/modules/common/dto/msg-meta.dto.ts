@@ -2,11 +2,16 @@ import {
   IsOptional,
   IsNumberString,
   IsArray,
+  ArrayNotEmpty,
+  ArrayUnique,
+  ArrayNotContains,
 } from 'class-validator';
 
 export class MsgMetaDto {
 
-  @IsArray()
+  @ArrayNotContains([''])
+  @ArrayUnique()
+  @ArrayNotEmpty()
   @IsOptional()
   readonly tags?: string[];
 

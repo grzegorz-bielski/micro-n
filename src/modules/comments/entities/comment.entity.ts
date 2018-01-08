@@ -4,14 +4,17 @@ import {
   PrimaryGeneratedColumn,
   AfterInsert,
   ManyToOne,
+  ManyToMany,
   OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { UserEntity } from '../../users/entities/user.entity';
+import { TagEntity } from '../../tags/entities/tag.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { CommentImageEntity } from './comment-image.entity';
+import { MsgMetadataPartial } from '../../common/partial-entities/msg-metadata.partial-entity';
 
 @Entity()
 export class CommentEntity {
@@ -35,24 +38,11 @@ export class CommentEntity {
   })
   public image: CommentImageEntity;
 
-  // metadata
+  @ManyToMany(type => TagEntity, tagEntity => tagEntity.comments, { eager: true })
+  public tags: TagEntity[];
 
-  @Column({ type: 'int', default: 0 })
-  public score: number;
+  // embedded entities
 
-  @CreateDateColumn()
-  public createdAt: string;
-
-  @UpdateDateColumn()
-  public updatedAt: string;
-
-  // event listeners
-
-  @AfterInsert()
-  public addDefault() {
-    if (!this.score) {
-      this.score = 0;
-    }
-  }
-
+  @Column(type => MsgMetadataPartial)
+  public meta: MsgMetadataPartial;
 }

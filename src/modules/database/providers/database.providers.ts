@@ -9,6 +9,7 @@ import { MySQLConnectionToken, RedisClientToken } from '../../constants';
 
 // entities
 import { UserEntity } from '../../users/entities/user.entity';
+import { TagEntity } from '../../tags/entities/tag.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { PostImageEntity } from '../../posts/entities/post-image.entity';
 import { CommentEntity } from '../../comments/entities/comment.entity';
@@ -31,12 +32,14 @@ export const databaseProviders: IdatabaseProviders[] = [
         database: mysqlConfig.pathname.substr(1),
         entities: [
           UserEntity,
+          TagEntity,
           PostEntity,
           PostImageEntity,
           CommentEntity,
           CommentImageEntity,
         ],
         synchronize: true,
+        // logging: ['error', 'warn'],
       });
 
       mysqlConnectionCounter++;

@@ -1,5 +1,4 @@
-import { Component, Inject, HttpStatus } from '@nestjs/common';
-import { HttpException } from '@nestjs/core';
+import { Component, Inject, HttpStatus, HttpException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 
@@ -174,7 +173,7 @@ export class AuthService implements IAuthService {
       .find(tokenObj => tokenObj.token === data.refreshToken);
 
     if (!refreshTokenObj) {
-      throw new HttpException('Invalid refresh token', HttpStatus.NOT_FOUND);
+      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
     }
 
     return refreshTokenObj;

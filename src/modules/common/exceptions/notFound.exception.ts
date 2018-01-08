@@ -1,5 +1,4 @@
-import { HttpException } from '@nestjs/core';
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, HttpException } from '@nestjs/common';
 
 export class NotFoundException extends HttpException {
   constructor(path: string) {

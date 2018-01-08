@@ -1,11 +1,12 @@
-import { Component, Inject, HttpStatus } from '@nestjs/common';
-import { HttpException } from '@nestjs/core';
+import { Component, Inject, HttpStatus, HttpException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { UserEntity } from '../../users/entities/user.entity';
+import { TagEntity } from '../../tags/entities/tag.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { CommentEntity } from '../entities/comment.entity';
 import { CommentImageEntity } from '../entities/comment-image.entity';
+import { TagsService } from '../../tags/services/tags.service';
 import {
   CommentRepositoryToken,
   CommentImageRepositoryToken,
@@ -21,6 +22,7 @@ import { Image } from '../../common/interfaces/image.interface';
 interface IComment {
   content: string;
   image: Image;
+  tags?: TagEntity[];
 }
 
 interface InewComment extends IComment {
@@ -49,6 +51,8 @@ export class CommentsService {
     private readonly userRepository: Repository<UserEntity>,
     @Inject(CommentImageRepositoryToken)
     private readonly commentImageRepository: Repository<CommentImageEntity>,
+
+    private readonly tagsService: TagsService,
   ) {}
 
   public async getComments(data: IComments, ignoreError: boolean = false) {
@@ -77,7 +81,7 @@ export class CommentsService {
     });
 
     if (!comment && !ignoreError) {
-      throw new HttpException('There is no such post', HttpStatus.NOT_FOUND);
+      throw new HttpException('There is no such comment', HttpStatus.NOT_FOUND);
     }
 
     return comment;
@@ -89,7 +93,7 @@ export class CommentsService {
       this.postRepository.findOneById(data.postId),
     ]);
     const commentImage: Image = data.image;
-    let commentData: object = { content: data.content, user, post };
+    let commentData: object = { content: data.content, tags: data.tags, user, post };
 
     if (!user) {
       throw new HttpException('There is no such user', HttpStatus.NOT_FOUND);
@@ -106,7 +110,7 @@ export class CommentsService {
   public async updateComment(data: IupdateComment) {
     const oldComment = data.comment;
     const commentImage: Image = data.image;
-    let commentData: object = { content: data.content };
+    let commentData: object = { content: data.content, tags: data.tags };
     let isDirectLink: boolean = false;
 
     if (commentImage && oldComment.image) {
@@ -126,26 +130,31 @@ export class CommentsService {
   }
 
   public async deleteComment(comment: CommentEntity) {
-
     // delete image
-    if (comment.image && comment.image.directLink) {
-      // delete from DB
-      this.commentImageRepository.remove(comment.image);
-    } else if (comment.image && comment.image.fileName) {
-      // delete from DB and disk
-      await Promise.all([
-        deleteImage(comment.image.fileName),
-        this.commentImageRepository.remove(comment.image),
-      ]);
-    }
-
+    await this.deleteImage(comment.image);
+    // delete comment
     await this.commentRepository.remove(comment);
+    // try deleting tags
+    await this.tagsService.deleteTags(comment.tags);
   }
 
   public async deleteAllComments(postId: number) {
     const { comments, count } = await this.getComments({ postId }, true);
     if (comments && count > 0) {
       return Promise.all(comments.map(comment => this.deleteComment(comment)));
+    }
+  }
+
+  private deleteImage(commentImage: CommentImageEntity): Promise<[void, CommentImageEntity]> {
+    if (commentImage && commentImage.directLink) {
+      // delete from DB
+      this.commentImageRepository.remove(commentImage);
+    } else if (commentImage && commentImage.fileName) {
+      // delete from DB and disk
+      return Promise.all([
+        deleteImage(commentImage.fileName),
+        this.commentImageRepository.remove(commentImage),
+      ]);
     }
   }
 

@@ -2,8 +2,6 @@ import { Interceptor, NestInterceptor, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
-// for use with Posts and Comments routes
-
 @Interceptor()
 export class SanitizationInterceptor implements NestInterceptor {
   public intercept(request, context: ExecutionContext, stream$: Observable<any>): Observable<any> {
@@ -19,20 +17,28 @@ export class SanitizationInterceptor implements NestInterceptor {
       },
     );
   }
-  private sanitize(postOrComment) {
-    // user
-    const { id, name, roles, isActive } = Object.assign({}, postOrComment.user);
-    const sanitizedPostOrComment = Object.assign(postOrComment, { user: { id, name, roles, isActive } });
+  // strip off all private data
+  private sanitize(data) {
+    // 1. user data
+    const { id, name, roles, isActive } = Object.assign({}, data.user);
+    const sanitizedData = Object.assign(data, { user: { id, name, roles, isActive } });
 
-    // post or comment
-    if (sanitizedPostOrComment.image && sanitizedPostOrComment.image.image) {
-      delete sanitizedPostOrComment.image.image;
-    }
-    // comments of post(s)
-    if (postOrComment.comments) {
-      sanitizedPostOrComment.comments = [...postOrComment.comments.map(this.sanitize)];
+    // 2. post/comment data
+    if (sanitizedData.image && sanitizedData.image.image) {
+      delete sanitizedData.image.image;
     }
 
-    return sanitizedPostOrComment;
+    // 3. check recursively other fields
+
+    // comments field
+    if (data.comments) {
+      sanitizedData.comments = [...data.comments.map(this.sanitize)];
+    }
+    // posts field
+    if (data.posts) {
+      sanitizedData.posts = [...data.comments.map(this.sanitize)];
+    }
+
+    return sanitizedData;
   }
 }

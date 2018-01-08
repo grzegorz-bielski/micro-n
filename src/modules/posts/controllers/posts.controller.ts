@@ -11,8 +11,8 @@ import {
   Query,
   UseInterceptors,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
-import { HttpException } from '@nestjs/core';
 
 import { PostsService } from '../services/posts.service';
 import { MsgDto } from '../../common/dto/msg.dto';
@@ -20,9 +20,8 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PostEntity } from '../entities/post.entity';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { SanitizationInterceptor } from '../../common/interceptors/content-sanitization.interceptor';
-import { ForbiddenException } from '../../common/exceptions/forbidden.exception';
-import { NotFoundException } from '../../common/exceptions/notFound.exception';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { TagsService } from '../../tags/services/tags.service';
 
 @Controller('posts')
 @UseGuards(RolesGuard)
@@ -30,6 +29,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class PostsController {
   constructor(
     private readonly postsService: PostsService,
+    private readonly tagsService: TagsService,
   ) {}
 
   @Get()
@@ -40,7 +40,7 @@ export class PostsController {
 
     const { posts, count, pages } = await this.postsService.getPosts(page, limit);
 
-    return { data: posts, meta: { count, pages } };
+    return { data: posts, meta: { count, pages, page } };
   }
 
   @Get('/:id')
@@ -53,13 +53,14 @@ export class PostsController {
   @Post()
   @Roles('user')
   public async newPost(@Body() body: MsgDto, @Request() req) {
-     return {
-       data: await this.postsService.newPost({
-         userId: req.user.id,
-         content: body.content,
-         image: body.image,
-       }),
-     };
+    return {
+      data: await this.postsService.newPost({
+        userId: req.user.id,
+        content: body.content,
+        image: body.image,
+        tags: (body.meta && body.meta.tags) ? await this.tagsService.createTags(body.meta.tags) : void 0,
+      }),
+    };
   }
 
   @Patch('/:id')
@@ -80,6 +81,7 @@ export class PostsController {
         post,
         content: body.content,
         image: body.image,
+        tags: (body.meta && body.meta.tags) ? await this.tagsService.createTags(body.meta.tags) : void 0,
       }),
     };
   }

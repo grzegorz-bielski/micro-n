@@ -14,7 +14,11 @@ export class RolesGuard implements CanActivate {
     if (!roles) {
       return true;
     }
-    console.log('Guard activated: ', roles);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Guard activated: ', roles);
+    }
+
     return request.user.roles && this.hasRole(request.user.roles, roles);
   }
 

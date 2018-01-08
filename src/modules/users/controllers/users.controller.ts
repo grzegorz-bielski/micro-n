@@ -53,7 +53,7 @@ export class UsersController {
   ) {}
 
   @Post('/signup')
-  public async signUp(@Body() user: SignUpUserDto, @Request() request): Promise<void | { hash: string }> {
+  public async signUp(@Body() user: SignUpUserDto): Promise<void | { hash: string }> {
     // check if given credentials are available
     await this.availabilityService.test(user, [
       { property: 'name', value: user.name },

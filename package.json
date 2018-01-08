@@ -11,7 +11,7 @@
     "test:watch": "jest --watch --colors --config=jest.json",
     "test:coverage": "jest --colors --config=jest.json --coverage --coverageDirectory=coverage",
     "e2e": "jest --colors --config=e2e/jest-e2e.json --runInBand",
-    "e2e:watch": "jest --colors --watch --config=e2e/jest-e2e.json --runInBand"
+    "e2e:watch": "jest --colors --watch --runInBand --config=e2e/jest-e2e.json"
   },
   "repository": {
     "type": "git",
@@ -24,11 +24,11 @@
   },
   "homepage": "https://github.com/Pesiok/micro-n#readme",
   "dependencies": {
-    "@nestjs/common": "^4.4.0",
-    "@nestjs/core": "^4.4.0",
-    "@nestjs/microservices": "^4.4.0",
-    "@nestjs/testing": "^4.4.0",
-    "@nestjs/websockets": "^4.4.0",
+    "@nestjs/common": "^4.5.6",
+    "@nestjs/core": "^4.5.7",
+    "@nestjs/microservices": "^4.5.7",
+    "@nestjs/testing": "^4.5.5",
+    "@nestjs/websockets": "^4.5.7",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
     "class-transformer": "^0.1.8",
@@ -37,13 +37,14 @@
     "express": "^4.16.2",
     "helmet": "^3.9.0",
     "jsonwebtoken": "^8.1.0",
+    "lodash": "^4.17.4",
     "mysql": "^2.15.0",
-    "nodemailer": "^4.4.0",
+    "nodemailer": "^4.4.1",
     "redis": "^2.8.0",
     "reflect-metadata": "^0.1.10",
-    "rxjs": "^5.5.2",
-    "typeorm": "^0.1.6",
-    "typescript": "^2.6.1"
+    "rxjs": "^5.5.6",
+    "typeorm": "^0.1.9",
+    "typescript": "^2.6.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.1",
@@ -51,19 +52,20 @@
     "@types/compression": "0.0.34",
     "@types/faker": "^4.1.2",
     "@types/helmet": "0.0.37",
-    "@types/jest": "^21.1.8",
-    "@types/jsonwebtoken": "^7.2.3",
-    "@types/node": "^8.0.53",
+    "@types/jest": "^21.1.10",
+    "@types/jsonwebtoken": "^7.2.5",
+    "@types/lodash": "^4.14.92",
+    "@types/node": "^8.5.7",
     "@types/nodemailer": "^3.1.5",
     "@types/nodemailer-smtp-transport": "^2.7.4",
-    "@types/redis": "^2.8.1",
+    "@types/redis": "^2.8.4",
     "@types/rx": "^4.1.1",
     "@types/supertest": "^2.0.4",
     "faker": "^4.1.0",
     "jest": "^21.2.1",
-    "nodemon": "^1.12.1",
+    "nodemon": "^1.14.8",
     "supertest": "^3.0.0",
-    "ts-jest": "^21.2.3",
+    "ts-jest": "^21.2.4",
     "ts-node": "^3.3.0"
   }
 }

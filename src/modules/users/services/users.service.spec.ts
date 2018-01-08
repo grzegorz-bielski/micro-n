@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { HttpException } from '@nestjs/core';
+import { HttpException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { User } from './../interfaces/user.interface';
@@ -107,7 +107,7 @@ describe('UsersService', () => {
   describe('updateStatus', () => {
     it('should set given status to user', async () => {
       expect(dbUser2.isActive).toBe(false);
-      await usersService.updateStatus(dbUser2.id, true);
+      await usersService.updateUser(dbUser2.id, { isActive: true });
       const postUpdateUser: UserEntity = await userRepository.findOne({ email: user2.email });
       expect(postUpdateUser.isActive).toBe(true);
     });

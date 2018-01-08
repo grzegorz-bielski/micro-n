@@ -2,8 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { promisify } from 'util';
-import { HttpStatus } from '@nestjs/common';
-import { HttpException } from '@nestjs/core';
+import { HttpStatus, HttpException } from '@nestjs/common';
 
 interface IdecodedStringData {
   extension: string;
