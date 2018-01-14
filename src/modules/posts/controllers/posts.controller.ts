@@ -2,6 +2,7 @@ import {
   Controller,
   UseGuards,
   Post,
+  Put,
   Get,
   Param,
   Body,
@@ -12,6 +13,7 @@ import {
   UseInterceptors,
   HttpStatus,
   HttpException,
+  HttpCode,
 } from '@nestjs/common';
 
 import { PostsService } from '../services/posts.service';
@@ -48,6 +50,25 @@ export class PostsController {
     return {
       data: await this.postsService.getPost(Number.parseInt(params.id)),
     };
+  }
+
+  @Put('/vote/:id')
+  @Roles('user')
+  @HttpCode(201)
+  public async vote(@Param() params: { id: string }, @Request() req) {
+    await this.postsService.vote({
+      userId: req.user.id,
+      msgId: Number.parseInt(params.id),
+    });
+  }
+
+  @Delete('/vote/:id')
+  @Roles('user')
+  public async unVote(@Param() params: { id: string }, @Request() req) {
+    await this.postsService.unVote({
+      userId: req.user.id,
+      msgId: Number.parseInt(params.id),
+    });
   }
 
   @Post()

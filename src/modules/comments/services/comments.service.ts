@@ -1,4 +1,9 @@
-import { Component, Inject, HttpStatus, HttpException } from '@nestjs/common';
+import {
+  Component,
+  Inject,
+  HttpStatus,
+  HttpException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { UserEntity } from '../../users/entities/user.entity';
@@ -7,17 +12,22 @@ import { PostEntity } from '../../posts/entities/post.entity';
 import { CommentEntity } from '../entities/comment.entity';
 import { CommentImageEntity } from '../entities/comment-image.entity';
 import { TagsService } from '../../tags/services/tags.service';
+import { MsgImageService } from '../../common/services/msg-image.service';
 import {
   CommentRepositoryToken,
   CommentImageRepositoryToken,
   UserRepositoryToken,
   PostRepositoryToken,
+  CommentsVotesRepositoryToken,
 } from '../../constants';
 import {
   saveImage,
   deleteImage,
 } from '../../common/util/files';
 import { Image } from '../../common/interfaces/image.interface';
+import { OnModuleInit } from '@nestjs/common/interfaces';
+import { CommentVoteEntity } from '../entities/comment-vote.entity';
+import { IVoteConfig, MsgVoteService, IVote } from '../../common/services/msg-vote.service';
 
 interface IComment {
   content: string;
@@ -41,7 +51,9 @@ interface IComments {
 }
 
 @Component()
-export class CommentsService {
+export class CommentsService implements OnModuleInit {
+  private voteConfig: IVoteConfig;
+
   constructor(
     @Inject(CommentRepositoryToken)
     private readonly commentRepository: Repository<CommentEntity>,
@@ -51,21 +63,33 @@ export class CommentsService {
     private readonly userRepository: Repository<UserEntity>,
     @Inject(CommentImageRepositoryToken)
     private readonly commentImageRepository: Repository<CommentImageEntity>,
+    @Inject(CommentsVotesRepositoryToken)
+    private readonly commentVoteRepository: Repository<CommentVoteEntity>,
 
     private readonly tagsService: TagsService,
+    private readonly imageService: MsgImageService,
+    private readonly voteService: MsgVoteService,
   ) {}
+
+  public onModuleInit() {
+    this.voteConfig = {
+      Entity: CommentVoteEntity,
+      type: 'comment',
+      userRepo: this.userRepository,
+      msgRepo: this.commentRepository,
+      msgVoteRepo: this.commentVoteRepository,
+    };
+  }
 
   public async getComments(data: IComments, ignoreError: boolean = false) {
     const { page, limit } = data;
-    const [ comments, count ] = await Promise.all([
-      this.commentRepository.find({
-        relations: ['user', 'image'],
-        where: { postId: data.postId },
-        take: limit ? limit : void 0,
-        skip: (page || limit) ? (page - 1) * limit : void 0,
-      }),
-      this.commentRepository.count(),
-    ]);
+    const offset = (page - 1) * limit;
+    const [ comments, count ] = await this.commentRepository.findAndCount({
+      relations: ['user', 'image'],
+      where: { postId: data.postId },
+      take: limit,
+      skip: offset,
+    });
 
     if ((count <= 0 || comments.length <= 0) && !ignoreError) {
       throw new HttpException('There is no comments for this post', HttpStatus.NOT_FOUND);
@@ -87,6 +111,14 @@ export class CommentsService {
     return comment;
   }
 
+  public vote(voteData: IVote): Promise<void> {
+    return this.voteService.createVote(voteData, this.voteConfig);
+  }
+
+  public unVote(voteData: IVote): Promise<void> {
+    return this.voteService.deleteVote(voteData, this.voteConfig);
+  }
+
   public async newComment(data: InewComment) {
     const [user, post] = await Promise.all([
       this.userRepository.findOneById(data.userId),
@@ -102,7 +134,7 @@ export class CommentsService {
       throw new HttpException('There is no such post', HttpStatus.NOT_FOUND);
     }
 
-    commentData = await this.persistImage(commentImage, commentData);
+    commentData = await this.imageService.persistImage(commentImage, commentData, CommentImageEntity);
 
     return this.commentRepository.save(Object.assign(new CommentEntity(), commentData));
   }
@@ -122,7 +154,7 @@ export class CommentsService {
       }
     }
 
-    commentData = await this.persistImage(commentImage, commentData);
+    commentData = await this.imageService.persistImage(commentImage, commentData, CommentImageEntity);
 
     return this.commentRepository.save(
       Object.assign(oldComment, commentData, { directLink: isDirectLink ? commentImage.directLink : ''}),
@@ -130,8 +162,12 @@ export class CommentsService {
   }
 
   public async deleteComment(comment: CommentEntity) {
-    // delete image
-    await this.deleteImage(comment.image);
+    // delete image & votes
+    await Promise.all([
+      this.imageService.deleteImage(comment.image, this.commentImageRepository),
+      this.voteService.deleteAllVotes(comment.id, this.voteConfig),
+    ]);
+
     // delete comment
     await this.commentRepository.remove(comment);
     // try deleting tags
@@ -145,32 +181,4 @@ export class CommentsService {
     }
   }
 
-  private deleteImage(commentImage: CommentImageEntity): Promise<[void, CommentImageEntity]> {
-    if (commentImage && commentImage.directLink) {
-      // delete from DB
-      this.commentImageRepository.remove(commentImage);
-    } else if (commentImage && commentImage.fileName) {
-      // delete from DB and disk
-      return Promise.all([
-        deleteImage(commentImage.fileName),
-        this.commentImageRepository.remove(commentImage),
-      ]);
-    }
-  }
-
-  private async persistImage(commentImage: Image, commentData: any): Promise<object> {
-    if (commentImage && commentImage.directLink) {
-      // save only link
-      delete commentImage.fileName;
-      delete commentImage.image;
-      commentData.image = Object.assign(new CommentImageEntity(), commentImage);
-    } else if (commentImage && commentImage.image) {
-       // image upload
-      commentData.image = Object.assign(new CommentImageEntity(), commentImage, {
-        // save image to public folder
-        fileName: await saveImage(commentImage.image, commentImage.fileName),
-      });
-    }
-    return commentData;
-  }
 }

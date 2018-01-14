@@ -8,6 +8,8 @@ import { TagsModule } from '../tags/tags.module';
 import { CommentsController } from './controllers/comments.controller';
 import { commentsProviders } from './providers/comments.providers';
 import { CommentsService } from './services/comments.service';
+import { MsgImageService } from '../common/services/msg-image.service';
+import { MsgVoteService } from '../common/services/msg-vote.service';
 
 @Module({
   modules: [
@@ -20,6 +22,8 @@ import { CommentsService } from './services/comments.service';
   components: [
     ...commentsProviders,
     CommentsService,
+    MsgImageService,
+    MsgVoteService,
   ],
   exports: [
     CommentsService,

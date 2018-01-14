@@ -57,7 +57,6 @@ export class TagsService {
 
       // delete if tag has no relations
       if (tag && (tag.posts.length <= 0 && tag.comments.length <= 0 )) {
-        console.log(tag.name);
         await this.tagRepostiory.remove(tag);
       }
     }

@@ -9,6 +9,8 @@ import {
   Param,
   Body,
   Request,
+  Put,
+  HttpCode,
   UseInterceptors,
   HttpStatus,
   HttpException,
@@ -38,13 +40,14 @@ export class CommentsController {
     @Query() query: PaginationDto,
   ) {
     const postId = Number.parseInt(params.id);
+    console.log(postId);
     const page = query && query.page ? Number.parseInt(query.page) : 1;
     let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
     if (limit > 50) limit = 50;
 
     const { comments, count, pages } = await this.commentsService.getComments({ postId, page, limit });
 
-    return { data: comments, meta: { count, pages } };
+    return { data: comments, meta: { count, pages, page } };
 
   }
 
@@ -55,6 +58,25 @@ export class CommentsController {
     return {
       data: await this.commentsService.getComment(commentId),
     };
+  }
+
+  @Put('/vote/:id')
+  @Roles('user')
+  @HttpCode(201)
+  public async vote(@Param() params: { id: string }, @Request() req) {
+    await this.commentsService.vote({
+      userId: req.user.id,
+      msgId: Number.parseInt(params.id),
+    });
+  }
+
+  @Delete('/vote/:id')
+  @Roles('user')
+  public async unVote(@Param() params: { id: string }, @Request() req) {
+    await this.commentsService.unVote({
+      userId: req.user.id,
+      msgId: Number.parseInt(params.id),
+    });
   }
 
   @Post('/post/:id')

@@ -12,8 +12,10 @@ import { UserEntity } from '../../users/entities/user.entity';
 import { TagEntity } from '../../tags/entities/tag.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { PostImageEntity } from '../../posts/entities/post-image.entity';
+import { PostVoteEntity } from '../../posts/entities/post-vote.entity';
 import { CommentEntity } from '../../comments/entities/comment.entity';
 import { CommentImageEntity } from '../../comments/entities/comment-image.entity';
+import { CommentVoteEntity } from '../../comments/entities/comment-vote.entity';
 
 let mysqlConnectionCounter = 0;
 
@@ -35,8 +37,10 @@ export const databaseProviders: IdatabaseProviders[] = [
           TagEntity,
           PostEntity,
           PostImageEntity,
+          PostVoteEntity,
           CommentEntity,
           CommentImageEntity,
+          CommentVoteEntity,
         ],
         synchronize: true,
         // logging: ['error', 'warn'],

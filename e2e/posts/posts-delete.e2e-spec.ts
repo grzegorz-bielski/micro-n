@@ -25,7 +25,7 @@ import { PostsService } from '../../src/modules/posts/services/posts.service';
 import { MySQLConnectionToken } from '../../src/modules/constants';
 
 // bigger timeout to populate / flush db
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('Posts DELETE', () => {
   // server config

@@ -3,6 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   BeforeInsert,
+  RelationCount,
   AfterInsert,
   OneToMany,
   CreateDateColumn,
@@ -13,12 +14,18 @@ import { HttpStatus } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
 import { PostEntity } from '../../posts/entities/post.entity';
+import { CommentEntity } from '../../comments/entities/comment.entity';
+import { CommentVoteEntity } from '../../comments/entities/comment-vote.entity';
+import { PostVoteEntity } from '../../posts/entities/post-vote.entity';
 
 const defaultRole = JSON.stringify(['user']);
 const defaultDescription = 'Write something about yourself.';
 
 @Entity()
 export class UserEntity {
+
+  // general info
+
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -31,11 +38,35 @@ export class UserEntity {
   @Column({ length: 100 })
   public password: string;
 
+  // posts
+
   @OneToMany(type => PostEntity, postEntity => postEntity.user)
   public posts: PostEntity[];
 
+  @RelationCount((user: UserEntity) => user.posts)
+  public postsCount: number;
+
+  @OneToMany(type => PostVoteEntity, postVoteEntity => postVoteEntity.user)
+  public postVotes: PostVoteEntity;
+
+  @RelationCount((user: UserEntity) => user.postVotes)
+  public postVotesCount: number;
+
+  // comments
+
+  @OneToMany(type => CommentEntity, commentEntity => commentEntity.user)
+  public comments: CommentEntity[];
+
+  @RelationCount((user: UserEntity) => user.comments)
+  public commentsCount: number;
+
+  @OneToMany(type => CommentVoteEntity, commentVoteEntity => commentVoteEntity.user)
+  public commentVotes: CommentVoteEntity[];
+
+  @RelationCount((user: UserEntity) => user.commentVotes)
+  public commentsVotesCount: number;
+
   // metadata
-  // TODO: make separate entity
 
   @CreateDateColumn()
   public createdAt: string;
