@@ -40,7 +40,6 @@ export class CommentsController {
     @Query() query: PaginationDto,
   ) {
     const postId = Number.parseInt(params.id);
-    console.log(postId);
     const page = query && query.page ? Number.parseInt(query.page) : 1;
     let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
     if (limit > 50) limit = 50;
@@ -48,7 +47,6 @@ export class CommentsController {
     const { comments, count, pages } = await this.commentsService.getComments({ postId, page, limit });
 
     return { data: comments, meta: { count, pages, page } };
-
   }
 
   @Get('/:id')

@@ -40,7 +40,7 @@ export const configureApp = (app: INestApplication): INestApplication => {
 
 (async () => {
   if (process.env.NODE_ENV !== 'test') {
-    await configureApp(await NestFactory.create(ApplicationModule))
+    configureApp(await NestFactory.create(ApplicationModule))
       .listen(port, () => console.log(`App started at port: ${port}`));
   }
 })();
