@@ -15,7 +15,7 @@ Node.js, [Nest framework](https://github.com/nestjs/nest), TypeORM, MySQL, Redis
 - [x] basic auth module
 - [x] basic tags module
 - [x] e2e tests refactor
-- [ ] voting
+- [x] voting
 - [ ] user details config
 - [ ] admin/mod dashboard
 - [ ] chat module
