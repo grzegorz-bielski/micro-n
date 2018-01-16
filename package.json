@@ -8,7 +8,7 @@
     "start:watch": "nodemon",
     "prestart:prod": "tsc",
     "start:prod": "node dist/server.js",
-    "test:watch": "jest --watch --colors --config=jest.json",
+    "test:watch": "jest --watch --colors --config=jest.json --runInBand",
     "test:coverage": "jest --colors --config=jest.json --coverage --coverageDirectory=coverage",
     "e2e": "jest --colors --config=e2e/jest-e2e.json --runInBand",
     "e2e:watch": "jest --colors --watch --runInBand --config=e2e/jest-e2e.json"

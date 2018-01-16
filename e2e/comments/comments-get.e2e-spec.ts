@@ -110,8 +110,8 @@ describe('Comments GET', () => {
 
       expect(getCommentsBody.data[0].id).toBe(dbComments[0].id);
       expect(getCommentsBody.data[0].content).toBe(dbComments[0].content);
-      expect(getCommentsBody.meta.count).toBe(18);
-      expect(getCommentsBody.meta.pages).toBe(9);
+      expect(getCommentsBody.meta.count).toBe(15);
+      expect(getCommentsBody.meta.pages).toBe(8);
     });
   });
 

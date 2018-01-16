@@ -26,17 +26,23 @@ export class TagsController {
 
   @Get('/:name')
   public async getTaggedContent( @Param() { name }: TagParamsDto, @Query() query: PaginationDto ) {
-    const content = query.content === 'comments' ? 'comments' : 'posts';
+    const content = query.content === 'comments' ? 'comment' : 'post';
     const page = query && query.page ? Number.parseInt(query.page) : 1;
     let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
     if (limit > 50) limit = 50;
 
     const tag = await this.tagsService.getTag(name, false);
-    const { contentData, count, pages } = await this.tagsService.getTagContent({
-      name, limit, page, content,
+    const { [`${content}s`]: data, count, pages } = await this.tagsService.getTagContent({
+      name,
+      limit,
+      page,
+      newerThan: query.newerThan,
+      sort: query.sort,
+      top: query.top,
+      content,
     });
 
-    return { data: contentData, meta: { count, pages, page, tag, content } };
+    return { data, meta: { count, pages, page, tag, content: `${content}s`} };
   }
 
 }

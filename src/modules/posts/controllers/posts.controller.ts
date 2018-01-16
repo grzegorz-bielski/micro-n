@@ -40,7 +40,13 @@ export class PostsController {
     let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
     if (limit > 50) limit = 50;
 
-    const { posts, count, pages } = await this.postsService.getPosts(page, limit);
+    const { posts, count, pages } = await this.postsService.getPosts({
+      page,
+      limit,
+      sort: query.sort,
+      newerThan: query.newerThan,
+      top: query.top,
+    });
 
     return { data: posts, meta: { count, pages, page } };
   }

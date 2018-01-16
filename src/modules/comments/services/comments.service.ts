@@ -28,6 +28,7 @@ import { Image } from '../../common/interfaces/image.interface';
 import { OnModuleInit } from '@nestjs/common/interfaces';
 import { CommentVoteEntity } from '../entities/comment-vote.entity';
 import { IVoteConfig, MsgVoteService, IVote } from '../../common/services/msg-vote.service';
+import { MsgPaginationData, MsgPaginationService } from '../../common/services/msg-pagination.service';
 
 interface IComment {
   content: string;
@@ -44,10 +45,8 @@ interface IupdateComment extends IComment {
   comment: CommentEntity;
 }
 
-interface IComments {
+interface GetComments extends MsgPaginationData {
   postId: number;
-  page?: number;
-  limit?: number;
 }
 
 @Component()
@@ -69,6 +68,7 @@ export class CommentsService implements OnModuleInit {
     private readonly tagsService: TagsService,
     private readonly imageService: MsgImageService,
     private readonly voteService: MsgVoteService,
+    private readonly paginationService: MsgPaginationService,
   ) {}
 
   public onModuleInit() {
@@ -81,21 +81,13 @@ export class CommentsService implements OnModuleInit {
     };
   }
 
-  public async getComments(data: IComments, ignoreError: boolean = false) {
-    const { page, limit } = data;
-    const offset = (page - 1) * limit;
-    const [ comments, count ] = await this.commentRepository.findAndCount({
-      relations: ['user', 'image'],
-      where: { postId: data.postId },
-      take: limit,
-      skip: offset,
+  public async getComments(data: GetComments) {
+    return this.paginationService.getMsgs(data, {
+      type: 'comment',
+      relations: ['user', 'image', 'tags'],
+      repo: this.commentRepository,
+      where: [{ condition: 'comment.postId = :id', values: { id: data.postId } }],
     });
-
-    if ((count <= 0 || comments.length <= 0) && !ignoreError) {
-      throw new HttpException('There is no comments for this post', HttpStatus.NOT_FOUND);
-    }
-
-    return { comments, count, pages: Math.ceil(count / limit) };
   }
 
   public async getComment(commentId: number, ignoreError: boolean = false) {
@@ -175,7 +167,11 @@ export class CommentsService implements OnModuleInit {
   }
 
   public async deleteAllComments(postId: number) {
-    const { comments, count } = await this.getComments({ postId }, true);
+    const [ comments, count ] = await this.commentRepository.findAndCount({
+      relations: ['user', 'image'],
+      where: { postId },
+    });
+
     if (comments && count > 0) {
       return Promise.all(comments.map(comment => this.deleteComment(comment)));
     }

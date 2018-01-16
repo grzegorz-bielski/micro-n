@@ -84,20 +84,15 @@ export class UsersController {
 
     // get new tokens
     const tokenData: IaccessTokenData = { roles: user.roles, id: user.id };
-    const tokens: string[] = await Promise.all([
+    const [ accessToken, refreshToken ] = await Promise.all([
       this.authService.createAccessToken(tokenData),
       this.authService.createRefreshToken(tokenData),
     ]);
 
     // send user & tokens to sanitization interceptor
     return {
-      data: {
-        user,
-      },
-      meta: {
-        accessToken: tokens[0],
-        refreshToken: tokens[1],
-      },
+      data: { user },
+      meta: { accessToken, refreshToken },
     };
   }
 
@@ -148,10 +143,5 @@ export class UsersController {
       this.usersService.updateUser(id, { password: body.newPassword }),
       this.verificationService.deleteHash(body.hash),
     ]);
-  }
-
-  @All('*')
-  public all( @Request() req) {
-    throw new NotFoundException(req.route.path);
   }
 }

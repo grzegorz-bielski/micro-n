@@ -26,6 +26,7 @@ import { OnModuleInit } from '@nestjs/common/interfaces';
 import { MsgImageService } from '../../common/services/msg-image.service';
 import { PostVoteEntity } from '../entities/post-vote.entity';
 import { IVoteConfig, IVote, MsgVoteService } from '../../common/services/msg-vote.service';
+import { MsgPaginationService, MsgPaginationData } from '../../common/services/msg-pagination.service';
 
 interface IPost {
   content: string;
@@ -64,6 +65,7 @@ export class PostsService implements OnModuleInit {
     private readonly tagsService: TagsService,
     private readonly imageService: MsgImageService,
     private readonly voteService: MsgVoteService,
+    private readonly paginationService: MsgPaginationService,
   ) {}
 
   public onModuleInit() {
@@ -76,19 +78,12 @@ export class PostsService implements OnModuleInit {
     };
   }
 
-  public async getPosts(page: number, limit: number) {
-    const offset = (page - 1) * limit;
-    const [ posts, count ] = await this.postRepository.findAndCount({
-        relations: ['user', 'image'],
-        take: limit,
-        skip: offset,
+  public async getPosts(data: MsgPaginationData) {
+    return this.paginationService.getMsgs(data, {
+      repo: this.postRepository,
+      type: 'post',
+      relations: ['user', 'image', 'tags'],
     });
-
-    if (count <= 0 || posts.length <= 0) {
-      throw new HttpException('There is no posts', HttpStatus.NOT_FOUND);
-    }
-
-    return { posts, count, pages: Math.ceil(count / limit) };
   }
 
   public async getPost(id: number): Promise<PostEntity> {

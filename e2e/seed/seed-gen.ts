@@ -70,7 +70,7 @@ const generateAndCreateTags = ({ numberOf }: SeedGenerator): TagEntity[] => {
 
 const generateAndCreatePosts = (data: PostGenerator): PostEntity[] => {
   const posts: PostEntity[] = [];
-  for (let i = 0; i <= data.numberOf; i++) {
+  for (let i = 0; i < data.numberOf; i++) {
     posts.push(Object.assign(new PostEntity(), {
       user: data.user,
       tags: data.tags ? data.tags : void 0,
@@ -83,7 +83,7 @@ const generateAndCreatePosts = (data: PostGenerator): PostEntity[] => {
 
 const generateAndCreateComments = (data: CommentGenerator): CommentEntity[] => {
   const comments: CommentEntity[] = [];
-  for (let i = 0; i <= data.numberOf; i++) {
+  for (let i = 0; i < data.numberOf; i++) {
     comments.push(Object.assign(new CommentEntity(), {
       post: data.post,
       user: data.user,

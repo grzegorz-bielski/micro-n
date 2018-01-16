@@ -10,6 +10,7 @@ import { commentsProviders } from './providers/comments.providers';
 import { CommentsService } from './services/comments.service';
 import { MsgImageService } from '../common/services/msg-image.service';
 import { MsgVoteService } from '../common/services/msg-vote.service';
+import { MsgPaginationService } from '../common/services/msg-pagination.service';
 
 @Module({
   modules: [
@@ -24,6 +25,7 @@ import { MsgVoteService } from '../common/services/msg-vote.service';
     CommentsService,
     MsgImageService,
     MsgVoteService,
+    MsgPaginationService,
   ],
   exports: [
     CommentsService,

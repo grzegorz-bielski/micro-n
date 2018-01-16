@@ -35,16 +35,19 @@ export class CommentsController {
   ) {}
 
   @Get('/post/:id')
-  public async getComments(
-    @Param() params: { id: string },
-    @Query() query: PaginationDto,
-  ) {
-    const postId = Number.parseInt(params.id);
+  public async getComments( @Param() params: { id: string }, @Query() query: PaginationDto) {
     const page = query && query.page ? Number.parseInt(query.page) : 1;
     let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
     if (limit > 50) limit = 50;
 
-    const { comments, count, pages } = await this.commentsService.getComments({ postId, page, limit });
+    const { comments, count, pages } = await this.commentsService.getComments({
+      postId: Number.parseInt(params.id),
+      newerThan: query.newerThan,
+      sort: query.sort,
+      top: query.top,
+      page,
+      limit,
+    });
 
     return { data: comments, meta: { count, pages, page } };
   }
