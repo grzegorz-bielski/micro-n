@@ -21,7 +21,7 @@ import { VerificationService } from '../../src/modules/users/services/verificati
 import { NotFoundException } from '../../src/modules/common/exceptions/notFound.exception';
 
 // bigger timeout to populate db
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('Users DELETE ', () => {
   // server config

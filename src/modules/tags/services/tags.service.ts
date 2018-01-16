@@ -15,10 +15,9 @@ import {
 import { TagEntity } from '../entities/tag.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { CommentEntity } from '../../comments/entities/comment.entity';
+import { MsgPaginationData, MsgPaginationService } from '../../common/services/msg-pagination.service';
 
-export interface GetTagContent {
-  page: number;
-  limit: number;
+export interface GetTagContent extends MsgPaginationData {
   name: string;
   content: string;
 }
@@ -32,6 +31,8 @@ export class TagsService {
     private readonly tagRepostiory: Repository<TagEntity>,
     @Inject(CommentRepositoryToken)
     private readonly commentRepostiory: Repository<CommentEntity>,
+
+    private readonly paginationService: MsgPaginationService,
   ) {}
 
   public async createTags(tags: string[]): Promise<TagEntity[]> {
@@ -57,7 +58,6 @@ export class TagsService {
 
       // delete if tag has no relations
       if (tag && (tag.posts.length <= 0 && tag.comments.length <= 0 )) {
-        console.log(tag.name);
         await this.tagRepostiory.remove(tag);
       }
     }
@@ -81,39 +81,13 @@ export class TagsService {
   }
 
   // get tag relations with pagination
-  public async getTagContent({ page, limit, name, content}: GetTagContent) {
-    const offset = (page - 1) * limit;
-    const [ contentData, count ] = (
-      content === 'comments'
-        ? await this.getTagComments(name, limit, offset)
-        : await this.getTagPosts(name, limit, offset)
-    );
-
-    return { contentData, count, pages: Math.ceil(count / limit) };
-  }
-
-  private getTagComments(name: string, limit: number, offset: number): Promise<[CommentEntity[], number]> {
-    return this.commentRepostiory
-      .createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.tags', 'tags')
-      .leftJoinAndSelect('comment.user', 'commentUsers')
-      .leftJoinAndSelect('comment.image', 'commentImages')
-      .where('tags.name = :name', { name })
-      .take(limit)
-      .skip(offset)
-      .getManyAndCount();
-  }
-
-  private getTagPosts(name: string, limit: number, offset: number): Promise<[PostEntity[], number]> {
-    return this.postRepository
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.tags', 'tags')
-      .leftJoinAndSelect('post.user', 'postUsers')
-      .leftJoinAndSelect('post.image', 'postImages')
-      .where('tags.name = :name', { name })
-      .take(limit)
-      .skip(offset)
-      .getManyAndCount();
+  public getTagContent(data: GetTagContent) {
+    return this.paginationService.getMsgs(data, {
+      type: data.content,
+      relations: ['user', 'image', 'tags'],
+      repo: data.content === 'comment' ? this.commentRepostiory : this.postRepository,
+      where: [{ condition: 'tags.name = :name', values: { name: data.name } }],
+    });
   }
 
 }

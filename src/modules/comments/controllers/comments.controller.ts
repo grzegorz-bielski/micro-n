@@ -9,6 +9,8 @@ import {
   Param,
   Body,
   Request,
+  Put,
+  HttpCode,
   UseInterceptors,
   HttpStatus,
   HttpException,
@@ -33,19 +35,21 @@ export class CommentsController {
   ) {}
 
   @Get('/post/:id')
-  public async getComments(
-    @Param() params: { id: string },
-    @Query() query: PaginationDto,
-  ) {
-    const postId = Number.parseInt(params.id);
+  public async getComments( @Param() params: { id: string }, @Query() query: PaginationDto) {
     const page = query && query.page ? Number.parseInt(query.page) : 1;
     let limit = query && query.limit ? Number.parseInt(query.limit) : 10;
     if (limit > 50) limit = 50;
 
-    const { comments, count, pages } = await this.commentsService.getComments({ postId, page, limit });
+    const { comments, count, pages } = await this.commentsService.getComments({
+      postId: Number.parseInt(params.id),
+      newerThan: query.newerThan,
+      sort: query.sort,
+      top: query.top,
+      page,
+      limit,
+    });
 
-    return { data: comments, meta: { count, pages } };
-
+    return { data: comments, meta: { count, pages, page } };
   }
 
   @Get('/:id')
@@ -55,6 +59,25 @@ export class CommentsController {
     return {
       data: await this.commentsService.getComment(commentId),
     };
+  }
+
+  @Put('/vote/:id')
+  @Roles('user')
+  @HttpCode(201)
+  public async vote(@Param() params: { id: string }, @Request() req) {
+    await this.commentsService.vote({
+      userId: req.user.id,
+      msgId: Number.parseInt(params.id),
+    });
+  }
+
+  @Delete('/vote/:id')
+  @Roles('user')
+  public async unVote(@Param() params: { id: string }, @Request() req) {
+    await this.commentsService.unVote({
+      userId: req.user.id,
+      msgId: Number.parseInt(params.id),
+    });
   }
 
   @Post('/post/:id')

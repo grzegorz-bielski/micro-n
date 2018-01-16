@@ -14,6 +14,8 @@ import { AvailabilityService } from './services/availability.service';
 import { VerificationService } from './services/verification.service';
 import { UsersController } from './controllers/users.controller';
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+
 describe('UsersModule', () => {
   let usersService: UsersService;
   let availabilityService: AvailabilityService;

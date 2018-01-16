@@ -7,3 +7,5 @@ export const PostImageRepositoryToken = 'PostImageRepositoryToken';
 export const CommentRepositoryToken = 'CommentsRepositoryToken';
 export const CommentImageRepositoryToken = 'CommentImageRepositoryToken';
 export const TagRepositoryToken = 'TagRepositoryToken';
+export const PostVotesRepositoryToken = 'PostVotesRepositoryToken';
+export const CommentsVotesRepositoryToken = 'CommentsVotesRepositoryToken';

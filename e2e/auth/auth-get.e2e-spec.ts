@@ -20,7 +20,7 @@ import { DbContent } from '../seed/seed-interfaces';
 import { MySQLConnectionToken } from '../../src/modules/constants';
 
 // bigger timeout to populate db
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('Users GET', () => {
   // server config

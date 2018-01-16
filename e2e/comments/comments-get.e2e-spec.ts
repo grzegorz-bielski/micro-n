@@ -18,7 +18,7 @@ import { CommentsService } from '../../src/modules/comments/services/comments.se
 import { MySQLConnectionToken } from '../../src/modules/constants';
 
 // bigger timeout to populate / flush db
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('Comments GET', () => {
   // server config
@@ -110,8 +110,8 @@ describe('Comments GET', () => {
 
       expect(getCommentsBody.data[0].id).toBe(dbComments[0].id);
       expect(getCommentsBody.data[0].content).toBe(dbComments[0].content);
-      expect(getCommentsBody.meta.count).toBe(18);
-      expect(getCommentsBody.meta.pages).toBe(9);
+      expect(getCommentsBody.meta.count).toBe(15);
+      expect(getCommentsBody.meta.pages).toBe(8);
     });
   });
 

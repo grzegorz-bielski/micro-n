@@ -2,6 +2,9 @@ import {
   IsOptional,
   IsString,
   IsNumberString,
+  IsDateString,
+  IsBooleanString,
+  IsIn,
 } from 'class-validator';
 
 export class PaginationDto {
@@ -17,5 +20,17 @@ export class PaginationDto {
   @IsOptional()
   @IsString()
   readonly content?: string;
+
+  @IsOptional()
+  @IsDateString()
+  readonly newerThan?: string;
+
+  @IsOptional()
+  @IsIn(['true'])
+  readonly top?: string;
+
+  @IsOptional()
+  @IsIn(['true'])
+  readonly sort?: string;
 
 }

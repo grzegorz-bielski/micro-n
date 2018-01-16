@@ -10,19 +10,20 @@ Node.js, [Nest framework](https://github.com/nestjs/nest), TypeORM, MySQL, Redis
 ## Roadmap & to do
 - [x] basic posts module
 - [x] basic comments module
-- [x] basic mail service
+- [x] basic mail module
 - [x] basic users module
 - [x] basic auth module
 - [x] basic tags module
 - [x] e2e tests refactor
 - [ ] voting
+- [ ] user details config
 - [ ] admin/mod dashboard
 - [ ] chat module
 - [ ] auth module refactor
 - [ ] more unit tests
 - [ ] cache (?)
 - [ ] docker (?)
-- [ ] swagger integration (??)
+- [ ] swagger / postman doc integration (??)
 - [ ] aws integration (?)
 - [ ] subscriptions (?)
 - [ ] notifications (?)

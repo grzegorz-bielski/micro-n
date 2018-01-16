@@ -22,7 +22,7 @@ import { CommentVoteEntity } from '../../src/modules/comments/entities/comment-v
 // bigger timeout to populate / flush db
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
-describe('Comments DELETE', () => {
+describe('Comments PUT', () => {
   // server config
   const prefix = 'api';
   const server = express();
@@ -54,12 +54,13 @@ describe('Comments DELETE', () => {
     const dbModule = module.select<DatabaseModule>(DatabaseModule);
     connection = dbModule.get(MySQLConnectionToken);
     commentsService = commentsModule.get<CommentsService>(CommentsService);
-    // hacks...
+    // hackS...
     // tslint:disable-next-line
     commentRepository = commentsService['commentRepository'];
+
     // tslint:disable-next-line
     commentVoteRepository = commentsService['commentVoteRepository'];
-
+		
   });
 
   beforeEach(async () => {
@@ -79,108 +80,48 @@ describe('Comments DELETE', () => {
     }
   });
 
-  describe('/posts/vote/:id', () => {
-    it('should delete existing vote of proper user', async () => {
-      const { dbComments, dbUsers, generatedUsers } = dbContent;
+  describe('/vote/:id', () => {
+    it('shouldn\'t create new vote if one already exists', async () => {
+      const { generatedUsers, dbComments } = dbContent;
+      const { body: logInBody } = await request(server)
+        .post(`/${prefix}/users/login`)
+        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
+        .expect(200);
+
+      const { body: putBody } = await request(server)
+        .put(`/${prefix}/comments/vote/${dbComments[0].id}`)
+        .set('x-auth', logInBody.meta.accessToken)
+        .set('x-refresh', logInBody.meta.refreshToken)
+        .expect(403);
+
+      expect(putBody.details).toBe('You can\'t vote twice');
+      expect(putBody.type).toBe('HttpException');
+    });
+
+    it('should create new vote if there is none', async () => {
+      const { generatedUsers, dbComments, dbUsers } = dbContent;
       const { body: logInBody } = await request(server)
         .post(`/${prefix}/users/login`)
         .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
         .expect(200);
 
       const voteBefore = await commentVoteRepository.findOne({
-        where: { commentId: dbComments[0].id, userId: dbUsers[0].id },
+        where: { commentId: dbComments[1].id, userId: dbUsers[0].id  },
       });
 
-      expect(voteBefore).toBeDefined();
+      expect(voteBefore).not.toBeDefined();
 
-      await request(server)
-        .delete(`/${prefix}/comments/vote/${dbComments[0].id}`)
+      const { body: putBody } = await request(server)
+        .put(`/${prefix}/comments/vote/${dbComments[1].id}`)
         .set('x-auth', logInBody.meta.accessToken)
         .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(200);
+        .expect(201);
 
       const voteAfter = await commentVoteRepository.findOne({
-        where: { commentId: dbComments[0].id, userId: dbUsers[0].id },
+        where: { commentId: dbComments[1].id, userId: dbUsers[0].id  },
       });
 
-      expect(voteAfter).not.toBeDefined();
-    });
-
-    it('shoulnd throw HttpException if vote was already deleted/doesn\'t exists', async () => {
-      const { dbComments, dbUsers, generatedUsers } = dbContent;
-      const { body: logInBody } = await request(server)
-        .post(`/${prefix}/users/login`)
-        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
-        .expect(200);
-
-      await request(server)
-        .delete(`/${prefix}/comments/vote/${dbComments[0].id}`)
-        .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(200);
-
-      await request(server)
-        .delete(`/${prefix}/comments/vote/${dbComments[0].id}`)
-        .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(404);
-    });
-  });
-
-  describe('/comments/:id', () => {
-    it('should delete comment if user is valid', async () => {
-      const { generatedUsers, dbComments } = dbContent;
-
-      // login
-      const { body: logInBody } = await request(server)
-        .post(`/${prefix}/users/login`)
-        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
-        .expect(200);
-
-      // delete
-      const { body: updateCommentBody } = await request(server)
-        .delete(`/${prefix}/comments/${dbComments[0].id}`)
-        .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(200);
-
-      const dbComment = await commentRepository.findOneById(dbComments[0].id);
-
-      expect(dbComment).toBeUndefined();
-    });
-
-    it('should throw HttpException if tokens are invalid', async () => {
-      const { generatedUsers, dbComments } = dbContent;
-
-      // login
-      const { body: logInBody } = await request(server)
-        .post(`/${prefix}/users/login`)
-        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
-        .expect(200);
-
-      // delete
-      await request(server)
-        .delete(`/${prefix}/comments/${dbComments[0].id}`)
-        .set('x-auth', 'ergergergerg')
-        .set('x-refresh', 'rererereer')
-        .expect(401);
-      });
-
-    it('shouldn\'t delete post of other user', async () => {
-      const { generatedUsers, dbComments } = dbContent;
-
-      // login
-      const { body: logInBody } = await request(server)
-        .post(`/${prefix}/users/login`)
-        .send({ email: generatedUsers[0].email, password: generatedUsers[0].password })
-        .expect(200);
-
-      // delete
-      await request(server)
-        .delete(`/${prefix}/comments/${dbComments[6].id}`)
-        .set('x-auth', logInBody.meta.accessToken)
-        .set('x-refresh', logInBody.meta.refreshToken)
-        .expect(403);
+      expect(voteAfter).toBeDefined();
     });
   });
 });

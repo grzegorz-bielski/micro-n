@@ -19,7 +19,7 @@ import { CommentsService } from '../../src/modules/comments/services/comments.se
 import { MySQLConnectionToken } from '../../src/modules/constants';
 
 // bigger timeout to populate / flush db
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('Comments PATCH', () => {
   // server config

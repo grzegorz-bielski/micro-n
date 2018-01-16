@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import * as faker from 'faker';
 import * as _ from 'lodash';
-import { Connection } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 
 // entities
 import { UserEntity } from '../../src/modules/users/entities/user.entity';
@@ -20,10 +20,13 @@ import {
   PostGenerator,
   CommentGenerator,
   DbContent,
+  VotesGenerator,
 } from './seed-interfaces';
 
 // util
 import { saveImage } from '../../src/modules/common/util/files';
+import { CommentVoteEntity } from '../../src/modules/comments/entities/comment-vote.entity';
+import { PostVoteEntity } from '../../src/modules/posts/entities/post-vote.entity';
 
 export const dummyImage = {
   // fileName: 'foo',
@@ -49,6 +52,12 @@ const defaultPopulateConfig: PopulateConfig = {
   dbTags: {
     numberOf: 2,
   },
+  dbPostsVotes: {
+    posts: [0],
+  },
+  dbCommentsVotes: {
+    comments: [0],
+  },
 };
 
 const generateAndCreateTags = ({ numberOf }: SeedGenerator): TagEntity[] => {
@@ -61,7 +70,7 @@ const generateAndCreateTags = ({ numberOf }: SeedGenerator): TagEntity[] => {
 
 const generateAndCreatePosts = (data: PostGenerator): PostEntity[] => {
   const posts: PostEntity[] = [];
-  for (let i = 0; i <= data.numberOf; i++) {
+  for (let i = 0; i < data.numberOf; i++) {
     posts.push(Object.assign(new PostEntity(), {
       user: data.user,
       tags: data.tags ? data.tags : void 0,
@@ -74,7 +83,7 @@ const generateAndCreatePosts = (data: PostGenerator): PostEntity[] => {
 
 const generateAndCreateComments = (data: CommentGenerator): CommentEntity[] => {
   const comments: CommentEntity[] = [];
-  for (let i = 0; i <= data.numberOf; i++) {
+  for (let i = 0; i < data.numberOf; i++) {
     comments.push(Object.assign(new CommentEntity(), {
       post: data.post,
       user: data.user,
@@ -99,18 +108,35 @@ const generateUsers = (data: UsersGenerator): User[] => {
   return newUsers;
 };
 
+const genereteAndCreateVotes = (data: VotesGenerator): any[] => {
+  const votes: any[] = [];
+  data.msgs.forEach(msg => {
+    votes.push(Object.assign(new data.Entity(), {
+      user: data.user, [data.type]: msg,
+    }));
+  });
+  return votes;
+};
+
 export async function flushDb(connection: Connection): Promise<void> {
   const deleteQuery = connection.manager.createQueryBuilder().delete();
 
-  // flushing actions should be in order
+  // flushing actions should be in order!
+
+  // 1. comments & posts relations
   await Promise.all([
     deleteQuery.from('tag_entity_comments_comment_entity').execute(),
-    deleteQuery.from('tag_entity_posts_post_entity').execute(),
     deleteQuery.from(CommentImageEntity).execute(),
+    deleteQuery.from(CommentVoteEntity).execute(),
+    deleteQuery.from('tag_entity_posts_post_entity').execute(),
     deleteQuery.from(PostImageEntity).execute(),
+    deleteQuery.from(PostVoteEntity).execute(),
   ]);
+  // 2. comments
   await deleteQuery.from(CommentEntity).execute();
+  // 3. posts
   await deleteQuery.from(PostEntity).execute();
+  // 4. tags & users
   await Promise.all([
     deleteQuery.from(TagEntity).execute(),
     deleteQuery.from(UserEntity).execute(),
@@ -126,61 +152,99 @@ export async function populateDb(
   // repositories
   const userRepository = connection.getRepository(UserEntity);
   const postRepository = connection.getRepository(PostEntity);
+  const postVoteRepository = connection.getRepository(PostVoteEntity);
   const commentRepository = connection.getRepository(CommentEntity);
+  const commentVoteRepository = connection.getRepository(CommentVoteEntity);
   const tagRepository = connection.getRepository(TagEntity);
 
   // user
   let users: User[];
-  let usersEntity: UserEntity[];
+  let userEntities: UserEntity[];
   if (config.dbUsers) {
     users = generateUsers(config.dbUsers);
-    usersEntity = await userRepository.save(
+    userEntities = await userRepository.save(
       users.map(user => Object.assign(new UserEntity(), user)),
     );
   }
 
   // tags
-  let tagsEntity: TagEntity[];
+  let tagEntities: TagEntity[];
   if (config.dbTags) {
-    tagsEntity = await tagRepository.save(
+    tagEntities = await tagRepository.save(
       generateAndCreateTags(config.dbTags),
     );
   }
 
   // posts
-  let postsEntity: PostEntity[];
+  let postEntities: PostEntity[];
   if (config.dbPosts) {
-    postsEntity = await postRepository.save(
-      usersEntity
-        .map(user => generateAndCreatePosts(Object.assign(config.dbPosts, { user, tags: tagsEntity })))
+    postEntities = await postRepository.save(
+      userEntities
+        .map(user => generateAndCreatePosts(Object.assign(config.dbPosts, { user, tags: tagEntities })))
+        .reduce((a, b) => a.concat(b)),
+    );
+  }
+
+  // posts' votes
+  let postVotesEntities: PostVoteEntity[];
+  if (config.dbPostsVotes) {
+    postVotesEntities = await postVoteRepository.save(
+      userEntities
+        .map(user => genereteAndCreateVotes({
+          user,
+          type: 'post',
+          Entity: PostVoteEntity,
+          msgs: postEntities
+            .filter((__, index) => index === config.dbPostsVotes.posts
+              .find(postId => postId === index)),
+        }))
         .reduce((a, b) => a.concat(b)),
     );
   }
 
   // comments
-  let commentsEntity: CommentEntity[];
+  let commentEntities: CommentEntity[];
   if (config.dbComments) {
-    commentsEntity = await commentRepository.save(
-      _.flattenDeep(usersEntity
+    commentEntities = await commentRepository.save(
+      _.flattenDeep(userEntities
         .map(user => {
           const userComments = [];
           config.dbComments.posts.forEach(post => userComments.push(generateAndCreateComments({
             user,
-            tags: tagsEntity,
+            tags: tagEntities,
             numberOf: config.dbComments.numberOf,
             withImages: config.dbComments.withImages,
-            post: postsEntity[post],
+            post: postEntities[post],
           })));
           return userComments;
         })),
     );
   }
 
+  // comments' votes
+  let commentVotesEntities: CommentVoteEntity[];
+  if (config.dbCommentsVotes) {
+    commentVotesEntities = await commentVoteRepository.save(
+      userEntities
+        .map(user => genereteAndCreateVotes({
+          user,
+          type: 'comment',
+          Entity: CommentVoteEntity,
+          msgs: commentEntities
+            .filter((__, index) => index === config.dbCommentsVotes.comments
+              .find(commentId => commentId === index)),
+        }))
+        .reduce((a, b) => a.concat(b)),
+    );
+  }
+
   return {
     generatedUsers: users,
-    dbUsers: usersEntity,
-    dbPosts: postsEntity,
-    dbComments: commentsEntity,
-    dbTags: tagsEntity,
+    dbUsers: userEntities,
+    dbPosts: postEntities,
+    dbComments: commentEntities,
+    dbTags: tagEntities,
+    dbPostsVotes: postVotesEntities,
+    dbCommentsVotes: commentVotesEntities,
   };
 }

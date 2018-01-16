@@ -25,7 +25,7 @@ import { PostsService } from '../../src/modules/posts/services/posts.service';
 import { MySQLConnectionToken } from '../../src/modules/constants';
 
 // bigger timeout to populate / flush db
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('Posts GET', () => {
   // server config
@@ -107,8 +107,8 @@ describe('Posts GET', () => {
 
       expect(body.data[0].id).toBe(dbPost.id);
       expect(body.data[0].content).toBe(dbPost.content);
-      expect(body.meta.count).toBe(18);
-      expect(body.meta.pages).toBe(9);
+      expect(body.meta.count).toBe(15);
+      expect(body.meta.pages).toBe(8);
     });
   });
 

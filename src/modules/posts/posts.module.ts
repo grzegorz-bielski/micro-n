@@ -9,6 +9,9 @@ import { TagsModule } from '../tags/tags.module';
 import { PostsController } from './controllers/posts.controller';
 import { postProviders } from './providers/posts.providers';
 import { PostsService } from './services/posts.service';
+import { MsgImageService } from '../common/services/msg-image.service';
+import { MsgVoteService } from '../common/services/msg-vote.service';
+import { MsgPaginationService } from '../common/services/msg-pagination.service';
 
 @Module({
   modules: [
@@ -22,6 +25,9 @@ import { PostsService } from './services/posts.service';
   components: [
       ...postProviders,
       PostsService,
+      MsgImageService,
+      MsgVoteService,
+      MsgPaginationService,
   ],
 })
 export class PostsModule {}

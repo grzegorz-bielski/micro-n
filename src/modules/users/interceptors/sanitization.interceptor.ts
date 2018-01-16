@@ -2,7 +2,7 @@ import { Interceptor, NestInterceptor, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
-// for use with User only
+// for use with Users route only
 
 @Interceptor()
 export class SanitizationInterceptor implements NestInterceptor {

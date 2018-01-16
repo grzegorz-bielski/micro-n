@@ -23,7 +23,7 @@ import { CommentsService } from '../../src/modules/comments/services/comments.se
 import { MySQLConnectionToken } from '../../src/modules/constants';
 
 // bigger timeout to populate / flush db
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
 
 describe('Tags GET', () => {
   // server config
@@ -102,7 +102,7 @@ describe('Tags GET', () => {
 
       expect(body.data).toHaveLength(10);
       expect(body.data[0].content).toEqual(dbPosts[0].content);
-      expect(body.meta.count).toBe(18);
+      expect(body.meta.count).toBe(15);
       expect(body.meta.page).toBe(1);
       expect(body.meta.pages).toBe(2);
       expect(body.meta.tag.name).toBe(tagName);
@@ -125,7 +125,7 @@ describe('Tags GET', () => {
 
       expect(body.data).toHaveLength(10);
       expect(body.data[0].content).toEqual(dbComments[0].content);
-      expect(body.meta.count).toBe(18);
+      expect(body.meta.count).toBe(15);
       expect(body.meta.page).toBe(1);
       expect(body.meta.pages).toBe(2);
       expect(body.meta.tag.name).toBe(tagName);

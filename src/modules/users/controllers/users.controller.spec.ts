@@ -214,16 +214,4 @@ describe('UsersController', () => {
     });
   });
 
-  describe('all', () => {
-    it('should throw NotFoundException', async () => {
-      const request = {
-        route: { path: '/*' },
-      };
-
-      expect(() => {
-        usersController.all(request);
-      }).toThrow(NotFoundException);
-    });
-  });
-
 });
