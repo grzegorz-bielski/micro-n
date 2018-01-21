@@ -5,11 +5,12 @@ interface IenvConfig {
   PORT: number;
   MYSQL_URL: string;
   REDIS_DATABASE: number;
+  REDIS_URL?: string;
   JWT_SECRET: string;
 }
 
 interface Iconfig {
-  test: object;
+  test?: object;
   development: object;
   production: object;
 }
@@ -24,9 +25,7 @@ export const setUpConfig = (): void => {
   process.env.NODE_ENV = process.env.NODE_ENV || 'development';
   const env: string = process.env.NODE_ENV;
 
-  if (env === 'development' || env === 'test') {
-    setUpEnvVariables(variables[env]);
-  }
+  setUpEnvVariables(variables[env]);
 };
 
 export const getConfig = (type: string, configuration: Iconfig = config) => (

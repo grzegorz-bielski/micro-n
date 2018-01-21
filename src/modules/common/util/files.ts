@@ -30,7 +30,7 @@ export const decodeB64Image = (stringData: string): IdecodedStringData => {
 export const saveImage = async (stringData: string, fileName: string): Promise<string> => {
   const decodedData = decodeB64Image(stringData);
   const generatedName = `${crypto.randomBytes(15).toString('hex')}-${fileName}.${decodedData.extension}`;
-  const filePath = path.resolve(__dirname, '../../..', `public/images/${generatedName}`);
+  const filePath = path.resolve(__dirname, '../../../..', `public/images/${generatedName}`);
 
   try {
     await writeFileAsync(filePath, decodedData.data, 'base64');
@@ -43,7 +43,7 @@ export const saveImage = async (stringData: string, fileName: string): Promise<s
 
 export const deleteImage = async (generatedName: string) => {
   try {
-    await unlinkAsync(path.resolve(__dirname, '../../..', `public/images/${generatedName}`));
+    await unlinkAsync(path.resolve(__dirname, '../../../..', `public/images/${generatedName}`));
   } catch (error) {
     throw new HttpException('Couldn\'t delete image', HttpStatus.INTERNAL_SERVER_ERROR);
   }
@@ -51,7 +51,7 @@ export const deleteImage = async (generatedName: string) => {
 
 export const getImage = async (generatedName: string): Promise<Buffer> => {
   try {
-    return await readFileAsync(path.resolve(__dirname, '../../..', `public/images/${generatedName}`));
+    return await readFileAsync(path.resolve(__dirname, '../../../..', `public/images/${generatedName}`));
   } catch (error) {
     throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }

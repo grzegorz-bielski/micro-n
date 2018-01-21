@@ -17,11 +17,17 @@ npm-debug.log
 /coverage
 /.nyc_output
 
-#config
+# config
 /src/config/details
+
+# env
+.env
 
 # dist
 /dist
 
 # assets
-/src/public/images
+public/images
+
+# db data
+data

@@ -1,0 +1,45 @@
+version: "3"
+services:
+  db:
+    image: mysql
+    volumes:
+      - ./data:/var/lib/mysql:rw
+    restart: always
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DB}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_PASS}"
+    networks: 
+      - webnet
+  redis:
+    image: redis
+    networks:
+      - webnet
+  web:
+    image: micro-n
+    volumes:
+      - ./public/images:/app/public/images
+    networks:
+      - webnet
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DB: "${MYSQL_DB}"
+      MYSQL_PASS: "${MYSQL_PASS}"
+      REDIS_HOST: redis
+      JWT_SECRET: "${ENV_SECRET}"
+    depends_on:
+      - db
+      - redis
+    command: ["./wait-for-it.sh", "db:3306", "--", "node", "server.js"]
+  nginx:
+    image: nginx
+    volumes:
+    - ./site.conf:/etc/nginx/conf.d/default.conf
+    - ./public/images:/public/images
+    ports:
+    - "8080:80"
+    networks:
+      - webnet
+    depends_on:
+      - web
+networks:
+  webnet:

@@ -23,6 +23,7 @@ export const databaseProviders: IdatabaseProviders[] = [
   {
     provide: MySQLConnectionToken,
     useFactory: async () => {
+
       const mysqlConfig = new URL(process.env.MYSQL_URL);
       const connection: Connection = await createConnection({
         name: `connection-${mysqlConnectionCounter}`,
@@ -42,6 +43,7 @@ export const databaseProviders: IdatabaseProviders[] = [
           CommentImageEntity,
           CommentVoteEntity,
         ],
+        connectTimeout: 30 * 1000,
         synchronize: true,
         // logging: ['error', 'warn'],
       });

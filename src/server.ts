@@ -3,7 +3,6 @@ import * as compression from 'compression';
 import * as bodyParser from 'body-parser';
 import * as helmet from 'helmet';
 import * as express from 'express';
-import * as path from 'path';
 import { NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
 
@@ -24,7 +23,7 @@ export const configureApp = (app: INestApplication): INestApplication => {
   app.use(helmet());
   app.use(bodyParser.json({ limit: '5mb' }));
   app.use(compression());
-  app.use(express.static(path.resolve(__dirname, './public')));
+  app.use('/public', express.static('public'));
 
   // nest global config
   app.setGlobalPrefix('api');
