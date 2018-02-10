@@ -1,13 +1,11 @@
-# Micro-N - Microblogging API 
-
-Being developed as backend for not yet existing web app.
+# Micro-N - Microblogging Platform 
 
 **Currently in active development.**
 
-## Stack
+## Backend Stack
 Node.js, [Nest framework](https://github.com/nestjs/nest), TypeORM, MySQL, Redis, Nodemailer, JWT, class-validator and Jest.
 
-## Roadmap & to do
+## Backend Roadmap & TODO
 - [x] basic posts module
 - [x] basic comments module
 - [x] basic mail module
@@ -27,6 +25,9 @@ Node.js, [Nest framework](https://github.com/nestjs/nest), TypeORM, MySQL, Redis
 - [ ] aws integration (?)
 - [ ] subscriptions (?)
 - [ ] notifications (?)
+
+## Frontend
+todo
 
 ## Installation & start
 1. install Node.js

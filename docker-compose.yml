@@ -1,45 +1,61 @@
 version: "3"
+
 services:
+
   db:
     image: mysql
-    volumes:
-      - ./data:/var/lib/mysql:rw
-    restart: always
-    environment:
-      MYSQL_DATABASE: "${MYSQL_DB}"
-      MYSQL_ROOT_PASSWORD: "${MYSQL_PASS}"
     networks: 
       - webnet
+    volumes:
+      - db-volume:/var/lib/mysql:rw
+    restart: always
+    env_file:
+      - ./dev.env
+    
   redis:
     image: redis
     networks:
       - webnet
-  web:
-    image: micro-n
+    restart: always
     volumes:
-      - ./public/images:/app/public/images
+      - redis-volume:/data
+    env_file:
+      - ./dev.env
+
+  backend:
+    build: ./backend
     networks:
       - webnet
-    environment:
-      MYSQL_HOST: db
-      MYSQL_DB: "${MYSQL_DB}"
-      MYSQL_PASS: "${MYSQL_PASS}"
-      REDIS_HOST: redis
-      JWT_SECRET: "${ENV_SECRET}"
+    volumes:
+      - ./backend:/backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./dev.env
     depends_on:
       - db
       - redis
-    command: ["./wait-for-it.sh", "db:3306", "--", "node", "server.js"]
+    command: 
+      bash -c "chmod 755 / && chmod 755 . -R 
+      && ./wait-for-it.sh $${MYSQL_HOST}:$${MYSQL_PORT} -- npm run start:watch-docker"
+  
   nginx:
-    image: nginx
-    volumes:
-    - ./site.conf:/etc/nginx/conf.d/default.conf
-    - ./public/images:/public/images
-    ports:
-    - "8080:80"
+    build: ./nginx
     networks:
       - webnet
+    restart: always
+    ports:
+    - "8000:80"
     depends_on:
-      - web
+      - backend
+    env_file:
+      - ./dev.env
+    
 networks:
+
   webnet:
+
+volumes:
+
+  db-volume:
+  redis-volume:

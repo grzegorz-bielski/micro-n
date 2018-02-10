@@ -1,5 +1,6 @@
 # dependencies
-/node_modules
+/backend/node_modules
+/frontend/node_modules
 
 # IDE
 /.idea
@@ -18,16 +19,13 @@ npm-debug.log
 /.nyc_output
 
 # config
-/src/config/details
-
-# env
-.env
+backend/src/config/details
 
 # dist
-/dist
+backend/dist
 
 # assets
-public/images
+backend/public
 
 # db data
-data
+backend/data
