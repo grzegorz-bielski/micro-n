@@ -1,4 +1,3 @@
-import { URL } from 'url';
 import * as redis from 'redis';
 import { createConnection, Connection } from 'typeorm';
 
@@ -19,8 +18,8 @@ import { CommentVoteEntity } from '../../comments/entities/comment-vote.entity';
 
 let mysqlConnectionCounter = 0;
 
-Object.keys(process.env)
-  .forEach(envVar => console.log(`${envVar}: ${process.env[envVar]}`));
+// Object.keys(process.env)
+//   .forEach(envVar => console.log(`${envVar}: ${process.env[envVar]}`));
 
 export const databaseProviders: IdatabaseProviders[] = [
   {
@@ -47,14 +46,13 @@ export const databaseProviders: IdatabaseProviders[] = [
             CommentImageEntity,
             CommentVoteEntity,
           ],
-          connectTimeout: 30 * 1000,
+          // connectTimeout: 30 * 1000,
           synchronize: process.env.NODE_ENV === 'production' ? false : true,
           // logging: ['error', 'warn'],
         });
       } catch (error) {
         console.log('Couldn\' connect to the MySQL DB.');
         console.log('details:', error);
-        return;
       }
 
       mysqlConnectionCounter++;

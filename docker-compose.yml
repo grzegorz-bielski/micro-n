@@ -10,52 +10,50 @@ services:
       - db-volume:/var/lib/mysql:rw
     restart: always
     env_file:
-      - ./dev.env
-    
+      - ./.env
   redis:
     image: redis
     networks:
       - webnet
     restart: always
+    env_file:
+      - ./.env
     volumes:
       - redis-volume:/data
-    env_file:
-      - ./dev.env
-
   backend:
     build: ./backend
     networks:
       - webnet
     volumes:
       - ./backend:/backend
-    ports:
-      - "3000:3000"
+      - static-volume:/backend/public
     env_file:
-      - ./dev.env
+      - ./.env
     depends_on:
       - db
       - redis
     command: 
       bash -c "chmod 755 / && chmod 755 . -R 
-      && ./wait-for-it.sh $${MYSQL_HOST}:$${MYSQL_PORT} -- npm run start:watch-docker"
-  
+      && ./wait-for-it.sh ${MYSQL_HOST}:${MYSQL_PORT} -- npm run start:watch-docker"
   nginx:
     build: ./nginx
     networks:
       - webnet
+    volumes:
+      - static-volume:/backend/public
     restart: always
+    env_file:
+      - ./.env
     ports:
     - "8000:80"
     depends_on:
       - backend
-    env_file:
-      - ./dev.env
-    
 networks:
 
   webnet:
 
 volumes:
 
+  static-volume:
   db-volume:
   redis-volume:

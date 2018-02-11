@@ -27,5 +27,5 @@ backend/dist
 # assets
 backend/public
 
-# db data
-backend/data
+# env
+.env

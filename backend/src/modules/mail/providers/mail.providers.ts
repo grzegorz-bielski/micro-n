@@ -3,7 +3,6 @@ import * as nodemailer from 'nodemailer';
 import * as smtpTransport from 'nodemailer-smtp-transport';
 import { MailTransportToken } from '../../constants';
 import { ImailProviders } from '../interfaces/providers.interface';
-import { getConfig } from '../../../config/configure';
 
 // dummy types for some 4.1.4 Nodemailer functions, not yet provided in @types/nodemailer
 declare module 'nodemailer' {
@@ -32,16 +31,15 @@ export const mailProviders: ImailProviders[] = [
           console.log(error);
         }
       } else {
-        const { user, id, secret, refreshToken, accessToken } = getConfig('mail');
         transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
             type: 'OAuth2',
-            user,
-            clientId: id,
-            clientSecret: secret,
-            refreshToken,
-            accessToken,
+            user: process.env.MAIL_USER,
+            clientId: process.env.MAIL_ID,
+            clientSecret: process.env.MAIL_SECRET,
+            refreshToken: process.env.MAIL_REFRESH_TOKEN,
+            accessToken: process.env.MAIL_ACCESS_TOKEN,
           },
         });
       }

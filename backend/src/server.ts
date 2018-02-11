@@ -7,7 +7,6 @@ import * as express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
 
-import { setUpConfig } from './config/configure';
 import { ApplicationModule } from './modules/app.module';
 import { ValidationPipe } from './modules/common/pipes/validation.pipe';
 import { TokenInterceptor } from './modules/auth/interceptors/token.interceptor';
@@ -15,9 +14,9 @@ import { TimestampInterceptor } from './modules/common/interceptors/timestamp.in
 import { HttpExceptionFilter } from './modules/common/filters/http-exception.filter';
 import { InternalErrorFilter } from './modules/common/filters/internal-error.filter';
 
-setUpConfig();
+// setUpConfig();
 
-const port = Number.parseInt(process.env.PORT);
+const port = Number.parseInt(process.env.NODE_PORT);
 
 export const configureApp = (app: INestApplication): INestApplication => {
   // express config

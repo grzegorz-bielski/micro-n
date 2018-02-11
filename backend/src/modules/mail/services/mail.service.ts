@@ -2,7 +2,6 @@ import { Component, Inject, HttpStatus, HttpException } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { MailTransportToken } from '../../constants';
 import { IsendEmail } from '../interfaces/mail.interface';
-import { getConfig } from '../../../config/configure';
 
 // dummy types for some 4.1.4 Nodemailer functions, not yet provided in @types/nodemailer
 declare module 'nodemailer' {
@@ -15,7 +14,7 @@ declare module 'nodemailer' {
 @Component()
 export class MailService {
   private readonly transportOptions = {
-    from: `"Micro-n 📧 service" <${getConfig('mail').user}>`,
+    from: `"Micro-n 📧 service" <${process.env.MAIL_USER}>`,
   };
 
   private readonly clientOptions = {
