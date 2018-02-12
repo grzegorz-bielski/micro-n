@@ -20,7 +20,6 @@ start-dev:
 build-prod:
 	docker-compose $(prod-dockerfile) build
 	$(MAKE) install-backend-dependencies
-	$(MAKE) build-backend
 
 .PHONY: start-prod
 start-prod:
@@ -35,4 +34,4 @@ install-backend-dependencies:
 
 .PHONY: build-backend
 build-backend:
-	docker-compose run --rm --no-deps backend npm run prestart:prod
+	docker-compose run --rm --no-deps backend bash -c "sudo chmod +r . -R && chmod +x ./backend && npm run prestart:prod"

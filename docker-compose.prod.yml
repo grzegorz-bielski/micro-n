@@ -3,13 +3,11 @@ version: '3.5'
 services:
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/prod.Dockerfile
+    build: 
+      context: ./backend
+      dockerfile: prod.Dockerfile
     restart: always
-    command: 
-      bash -c "chmod 755 / && chmod 755 . -R 
-      && wait-for-it.sh ${MYSQL_HOST}:${MYSQL_PORT} -- npm run start"
+    command: bash -c "./wait-for-it.sh ${MYSQL_HOST}:${MYSQL_PORT} -- npm run start"
 
   nginx:
     ports:

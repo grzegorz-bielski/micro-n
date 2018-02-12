@@ -3,10 +3,10 @@ FROM node:carbon
 ENV BACKEND_PATH /backend
 WORKDIR ${BACKEND_PATH}
 
-COPY package-lock.json .
-COPY package.json .
-COPY wait-for-it.sh .
-COPY public ./public
+ADD ./package-lock.json ${BACKEND_PATH}
+ADD ./package.json ${BACKEND_PATH}
+ADD ./wait-for-it.sh ${BACKEND_PATH}
+ADD ./public ${BACKEND_PATH}/public
 
 USER node
 

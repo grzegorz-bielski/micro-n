@@ -1,4 +1,4 @@
-version: "3"
+version: "3.5"
 
 services:
 
@@ -26,7 +26,6 @@ services:
       - webnet
     volumes:
       - ./backend:/backend
-      - static-volume:/backend/public
     env_file:
       - ./.env
     depends_on:
@@ -40,7 +39,7 @@ services:
     networks:
       - webnet
     volumes:
-      - static-volume:/backend/public
+      - ./backend/public:/public
     restart: always
     env_file:
       - ./.env
@@ -54,6 +53,5 @@ networks:
 
 volumes:
 
-  static-volume:
   db-volume:
   redis-volume:
