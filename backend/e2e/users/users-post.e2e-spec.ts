@@ -11,7 +11,6 @@ import { flushDb, populateDb } from '../seed/seed-gen';
 import { DbContent } from '../seed/seed-interfaces';
 import { MySQLConnectionToken } from '../../src/modules/constants';
 import { User } from '../../src/modules/users/interfaces/user.interface';
-import { setUpConfig } from '../../src/config/configure';
 import { configureApp } from '../../src/server';
 import { UsersModule } from '../../src/modules/users/users.module';
 import { DatabaseModule } from '../../src/modules/database/database.module';
@@ -40,8 +39,6 @@ describe('Users POST', () => {
 
    // dummy content
   let dbContent: DbContent;
-
-  setUpConfig();
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({

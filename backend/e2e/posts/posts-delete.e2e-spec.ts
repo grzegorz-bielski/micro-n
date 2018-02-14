@@ -10,7 +10,6 @@ import { Repository, Connection } from 'typeorm';
 import { flushDb, populateDb } from '../seed/seed-gen';
 import { DbContent } from '../seed/seed-interfaces';
 import { getImage, deleteImage } from '../../src/modules/common/util/files';
-import { setUpConfig } from '../../src/config/configure';
 import { configureApp } from '../../src/server';
 import { User } from '../../src/modules/users/interfaces/user.interface';
 import { TagEntity } from '../../src/modules/tags/entities/tag.entity';
@@ -43,8 +42,6 @@ describe('Posts DELETE', () => {
 
   // dummy content
   let dbContent: DbContent;
-
-  setUpConfig();
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({

@@ -10,5 +10,6 @@ services:
     command: bash -c "./wait-for-it.sh ${MYSQL_HOST}:${MYSQL_PORT} -- npm run start"
 
   nginx:
+    restart: always
     ports:
       - 80:80

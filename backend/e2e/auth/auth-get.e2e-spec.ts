@@ -8,7 +8,6 @@ import { INestApplication } from '@nestjs/common';
 import { Repository, Connection } from 'typeorm';
 
 import { User } from '../../src/modules/users/interfaces/user.interface';
-import { setUpConfig } from '../../src/config/configure';
 import { configureApp } from '../../src/server';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { DatabaseModule } from '../../src/modules/database/database.module';
@@ -39,10 +38,7 @@ describe('Users GET', () => {
    // dummy content
   let dbContent: DbContent;
 
-  setUpConfig();
-
   beforeAll(async () => {
-    setUpConfig();
 
     const module = await Test.createTestingModule({
       modules: [
