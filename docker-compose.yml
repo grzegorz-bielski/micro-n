@@ -1,4 +1,4 @@
-version: "3.5"
+version: '3.5'
 
 services:
 
@@ -11,6 +11,7 @@ services:
     restart: always
     env_file:
       - ./.env
+
   redis:
     image: redis
     networks:
@@ -20,8 +21,10 @@ services:
       - ./.env
     volumes:
       - redis-volume:/data
+
   backend:
     build: ./backend
+    restart: always
     networks:
       - webnet
     volumes:
@@ -31,9 +34,7 @@ services:
     depends_on:
       - db
       - redis
-    command: 
-      bash -c "chmod 755 / && chmod 755 . -R 
-      && ./wait-for-it.sh ${MYSQL_HOST}:${MYSQL_PORT} -- npm run start:watch-docker"
+
   nginx:
     build: ./nginx
     networks:
@@ -43,10 +44,11 @@ services:
     restart: always
     env_file:
       - ./.env
-    ports:
-    - "8000:80"
     depends_on:
       - backend
+    ports:
+      - 80:80
+
 networks:
 
   webnet:

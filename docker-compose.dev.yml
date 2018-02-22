@@ -1,0 +1,10 @@
+version: "3.5"
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: dev.Dockerfile
+    command: 
+      bash -c "chmod 755 / && chmod 755 . -R 
+      && ./wait-for-it.sh ${MYSQL_HOST}:${MYSQL_PORT} -- npm run start:watch-docker"
