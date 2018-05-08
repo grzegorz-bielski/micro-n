@@ -1,6 +1,6 @@
 # Micro-N - Microblogging Platform
 
-**Currently in active development.**
+**Not in active development anymore :c**
 
 ## Backend Stack
 
@@ -34,8 +34,8 @@ todo
 
 ## Installation & start
 
-1. [install docker and docker-compose](https://docs.docker.com/compose/install/)
-2. Add `.env` file
+1.  [install docker and docker-compose](https://docs.docker.com/compose/install/)
+2.  Add `.env` file
 
 Email module is adapted to use gmail's OAuth2 but it probably can be used with other services
 
@@ -64,7 +64,7 @@ REDIS_PORT=6379
 REDIS_DATABASE=0
 ```
 
-3. build containers from images
+3.  build containers from images
 
 ```
 # development
@@ -74,7 +74,7 @@ $ make build-dev
 $ make build-prod
 ```
 
-4. start all services
+4.  start all services
 
 ```
 # development
